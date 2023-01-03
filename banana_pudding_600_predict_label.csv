@@ -1,0 +1,19 @@
+Task,Object,State,Relation_on,Relation_in
+1,bowl,none,none,mixer
+2,condensed milk,none,none,bowl
+3,feta cheese,none,none,bowl
+4,pudding mixture,none,none,bowl
+5,milk,none,none,bowl
+6,cream,none,none,bowl
+7,cream,none,none,bowl
+8,banana pudding mix,none,none,bowl
+9,banana,none,cutting board,none
+10,banana,sliced,none,none
+11,banana,none,none,tray
+12,pudding,none,none,tray
+13,vanilla wafer,none,none,tray
+14,banana pudding,exist,none,none
+15,<PAD>,<PAD>,<PAD>,<PAD>
+16,<PAD>,<PAD>,<PAD>,<PAD>
+17,<PAD>,<PAD>,<PAD>,<PAD>
+18,<PAD>,<PAD>,<PAD>,<PAD>

@@ -1,0 +1,692 @@
+arugula:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+avocado:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+bacon:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  - fryable
+  isA:
+  - ingredient
+banana:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+black_olive:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+black_pepper:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+black_pepper_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - black_pepper
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+bowl:
+  AtLocation:
+  - table
+  - near_cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - dishware
+  - container
+bread:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+bread_toast:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+breadcrumb:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+broccoli:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+butter:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  - spreadable
+  isA:
+  - ingredient
+cabbage:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+celery:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+cheese:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+chili_pepper:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+chili_sauce:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+chili_sauce_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - chili_sauce
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+cilantro:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+coriander:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+cucumber:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+cutting_board:
+  HasProperty: []
+  isA:
+  - place
+dill:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+escarole:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+feta_cheese:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+garlic_bread:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+green:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+green_pepper:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+ham:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+hot_sauce:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+hot_sauce_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - hot_sauce
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+knife:
+  AtLocation:
+  - table
+  CapableOf:
+  - chop
+  - scrape
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - tool
+lemon_juice:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+lemon_juice_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - lemon_juice
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+lettuce:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+loaf:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+mango:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+matzo:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+mayonnaise:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+mayonnaise_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - mayonnaise
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+mustard:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+mustard_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - mustard
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+near_cutting_board:
+  HasProperty: []
+  isA:
+  - place
+olive_oil:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+olive_oil_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - olive_oil
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+onion:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  - choppable
+  isA:
+  - ingredient
+orange_pepper:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+oregano:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+pan:
+  AtLocation:
+  - table
+  - stove
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - cookware
+  - container
+parsley:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+peanut:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+pepper:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+pepper_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - pepper
+  HasProperty:
+  - movable
+  - graspable
+  - pourable
+  isA:
+  - ing_bottle
+plate:
+  AtLocation:
+  - table
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - dishware
+  - container
+pot:
+  AtLocation:
+  - table
+  - stove
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - cookware
+  - container
+potato:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+red_pepper:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+relish:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+relish_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - relish
+  HasProperty:
+  - movable
+  - graspable
+  - pourable
+  isA:
+  - ing_bottle
+salad:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+salt:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+salt_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - salt
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+sandwich:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - choppable
+  isA:
+  - ingredient
+scallion:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+scooper:
+  AtLocation:
+  - table
+  CapableOf:
+  - scoop
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - tool
+shrimp:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+spatula:
+  AtLocation:
+  - table
+  CapableOf:
+  - stir
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - tool
+spinach:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  - choppable
+  isA:
+  - ingredient
+spreader:
+  AtLocation:
+  - table
+  CapableOf:
+  - spread
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - tool
+stove:
+  HasProperty: []
+  isA:
+  - place
+sugar:
+  AtLocation: []
+  HasProperty:
+  - movable
+  isA:
+  - ingredient
+sugar_bottle:
+  AtLocation:
+  - table
+  Contains:
+  - sugar
+  HasProperty:
+  - movable
+  - graspable
+  isA:
+  - ing_bottle
+sweet_pepper:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+table:
+  HasProperty: []
+  isA:
+  - place
+tomato:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  - sliceable
+  isA:
+  - ingredient
+tuna:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  - choppable
+  isA:
+  - ingredient
+tuna_spread:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - scoopable
+  - stackable
+  isA:
+  - ingredient
+turkey:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
+walnut:
+  AtLocation:
+  - cutting_board
+  HasProperty:
+  - movable
+  - graspable
+  - stackable
+  isA:
+  - ingredient
