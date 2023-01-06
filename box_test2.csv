@@ -1,0 +1,14 @@
+ID,Type,Property_V,Property_C,Property_G,Property_Color,Relation_In
+1,Box,velcro,Contain,Graspable,red,None
+2,Box,Non-velcro,Contain,Graspable,red,Bowl
+3,Box,velcro,Contain,Graspable,orange,Bowl
+4,Box,velcro,Contain,Graspable,yellow,None
+5,Box,Non-velcro,Contain,Graspable,yellow,None
+6,Box,velcro,Contain,Graspable,green,None
+7,Box,Non-velcro,Contain,Graspable,green,Bowl
+8,Box,Non-velcro,Contain,Graspable,green,Bowl
+9,Box,velcro,Contain,Graspable,white,None
+10,Box,velcro,Contain,Graspable,black,Bowl
+11,Bowl,Non-velcro,Contain,Graspable,transparent,None
+12,Bowl,Non-velcro,Contain,Graspable,transparent,None
+13,Table,Non-velcro,Non-contain,Non-graspable,brown,None

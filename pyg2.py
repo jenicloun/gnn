@@ -45,6 +45,16 @@ sampler = data.NeighborSampler(graph.edge_index, sizes=[3,10], batch_size=4,
 for s in sampler:
     print(s)
     break
+
+
 print("Batch size:", s[0])
 print("Number of unique nodes involved in the sampling:",len(s[1]))
 print("Number of neighbors sampled:", len(s[2][0].edge_index[0]), len(s[2][1].edge_index[0]))
+
+
+
+
+
+
+
+

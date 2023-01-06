@@ -1,0 +1,14 @@
+ID,Type,Property_V,Property_C,Property_G,Property_Color,Relation_In,Relation_On,Relation_Attach
+1,Box,velcro,Contain,Graspable,red,,,"1,4,5,6,9"
+2,Box,Non-velcro,Contain,Graspable,red,"11,12","3,10",
+3,Box,Non-velcro,Contain,Graspable,orange,"11,12",,
+4,Box,velcro,Contain,Graspable,yellow,,,"1,4,5,6,9"
+5,Box,velcro,Contain,Graspable,yellow,,,"1,4,5,6,9"
+6,Box,velcro,Contain,Graspable,green,,,"1,4,5,6,9"
+7,Box,Non-velcro,Contain,Graspable,green,"11,12","3,10",
+8,Box,Non-velcro,Contain,Graspable,green,"11,12","3,10",
+9,Box,velcro,Contain,Graspable,white,,,"1,4,5,6,9"
+10,Box,Non-velcro,Contain,Graspable,black,"11,12",,
+11,Bowl,Non-velcro,Contain,Graspable,transparent,,,
+12,Bowl,Non-velcro,Contain,Graspable,transparent,,,
+13,Table,Non-velcro,Non-contain,Non-graspable,brown,,,
