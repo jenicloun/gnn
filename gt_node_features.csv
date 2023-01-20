@@ -1,0 +1,14 @@
+,ID,Type_Bowl,Type_Box,Type_Table,Property_V_Velcro,Property_C_Contain,Property_G_Graspable,Property_Color_black,Property_Color_brown,Property_Color_green,Property_Color_orange,Property_Color_red,Property_Color_transparent,Property_Color_white,Property_Color_yellow
+0,1,0,1,0,1,1,1,0,0,0,0,1,0,0,0
+1,2,0,1,0,0,1,1,0,0,0,0,1,0,0,0
+2,3,0,1,0,0,1,1,0,0,0,1,0,0,0,0
+3,4,0,1,0,1,1,1,0,0,0,0,0,0,0,1
+4,5,0,1,0,1,1,1,0,0,0,0,0,0,0,1
+5,6,0,1,0,1,1,1,0,0,1,0,0,0,0,0
+6,7,0,1,0,0,1,1,0,0,1,0,0,0,0,0
+7,8,0,1,0,0,1,1,0,0,1,0,0,0,0,0
+8,9,0,1,0,1,1,1,0,0,0,0,0,0,1,0
+9,10,0,1,0,0,1,1,1,0,0,0,0,0,0,0
+10,11,1,0,0,0,1,1,0,0,0,0,0,1,0,0
+11,12,1,0,0,0,1,1,0,0,0,0,0,1,0,0
+12,13,0,0,1,0,0,0,0,1,0,0,0,0,0,0
