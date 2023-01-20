@@ -37,3 +37,4 @@ def MLP(layers, input_dim, dropout = 0.0):
         mlp_layers.append(torch.nn.Linear(layers[layer_num], layers[layer_num + 1]))
 
     return torch.nn.Sequential(*mlp_layers)
+
