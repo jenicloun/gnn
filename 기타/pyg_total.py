@@ -108,27 +108,27 @@ print(x, '\n')
 
 
 
-## Error check
-from torch_scatter import scatter_add
-num_nodes = 8
-embed_size = 4
+# ## Error check
+# from torch_scatter import scatter_add
+# num_nodes = 8
+# embed_size = 4
 
-# src = torch.randint(0, num_nodes, (num_nodes, embed_size)) # 범위 내 정수를 균등하게 생성
-# src_index = torch.tensor([0,0,0,1,1,0,0,0]) 
-# tmp = torch.index_select(src, 0, src_index) # shape [num_edges, embed_size]
-# print("input: ")
-# print(tmp)
-target_index = torch.tensor([0,0,0,0,0,1,1,0]) # Target_index = goal = (Type_Box,Property_V:1 (velcro(o)), Property_C:0 (contain(o)), Property_G (graspable))
-aggr = scatter_add(node_features, target_index, 0) # shape [num_nodes, embed_size]
+# # src = torch.randint(0, num_nodes, (num_nodes, embed_size)) # 범위 내 정수를 균등하게 생성
+# # src_index = torch.tensor([0,0,0,1,1,0,0,0]) 
+# # tmp = torch.index_select(src, 0, src_index) # shape [num_edges, embed_size]
+# # print("input: ")
+# # print(tmp)
+# target_index = torch.tensor([0,0,0,0,0,1,1,0]) # Target_index = goal = (Type_Box,Property_V:1 (velcro(o)), Property_C:0 (contain(o)), Property_G (graspable))
+# aggr = scatter_add(node_features, target_index, 0) # shape [num_nodes, embed_size]
 
-# print("agg out:")
-print(aggr)
+# # print("agg out:")
+# print(aggr)
 
-# behind the sence, torch.scatter_add is used
-# repeat the edge_index
-index2 = target_index.expand((embed_size, target_index.size(0))).T
-# same result by using torch.scatter_add
-aggr2 = torch.zeros(num_nodes, embed_size, dtype=node_features.dtype).scatter_add(0, index2, node_features)
+# # behind the sence, torch.scatter_add is used
+# # repeat the edge_index
+# index2 = target_index.expand((embed_size, target_index.size(0))).T
+# # same result by using torch.scatter_add
+# aggr2 = torch.zeros(num_nodes, embed_size, dtype=node_features.dtype).scatter_add(0, index2, node_features)
 
 
 
