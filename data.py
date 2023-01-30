@@ -2,6 +2,7 @@ import os
 import torch
 import pandas as pd
 import torch_geometric
+import numpy as np
 from torch.utils.data import Dataset
 from torch_geometric.data import Dataset
 
@@ -88,7 +89,7 @@ class MakeDataset(Dataset):
         ef = ef_csv.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
         
 
-        # edge_index: [2, num_edges], edge_attr: [num_edges, num_edge_features]
+        # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
         
         ####################### Recommend to change #################
         ## Edge index
@@ -108,10 +109,13 @@ class MakeDataset(Dataset):
          
 
         ############################################################
-        ## Edge attribute
-        edge_attr = torch.Tensor(ef.values)
+        ## Edge attribute # on, in, attach 임의로 정해서 만들어 놓기
+        # edge_attr = torch.Tensor(ef.values)
+        edge_attr = torch.randint(2,(8,3))
         
         return edge_index, edge_attr
+
+ 
 
 ## Print
 
@@ -119,12 +123,132 @@ make_data = MakeDataset(root_path='dataset')
 
 
 # print(make_data.rand_sample(folder_name='node_features',file_name='nf1.csv',save_dir='node_features', n=13))
-print(make_data.node_feature(csv_file='nf1.csv', root_dir='node_features'))
-print(make_data.edge_feature(csv_file='ef1.csv', root_dir='edge_features'))
+x = make_data.node_feature(csv_file='nf1.csv', root_dir='node_features')
+edge_index, edge_attr = make_data.edge_feature(csv_file='ef0.csv', root_dir='edge_features')
+
+# print(edge_attr)
+# data = x, edge_index, edge_attr
 
 
-#### Data Loader
+# print("Node Feature:\n",x) #Number of nodes: 8, node feature: 13 (8,13)
+# print("\nEdge index:\n",edge_index) #(2,8)
+# print("\nEdge attr:\n", edge_attr) #shape [8,8]
+
+
+## Making graph data
+from torch_geometric.data import Data
+dataset = Data(x=x, edge_index= edge_index, edge_attr=edge_attr) # Data(x=[8, 13], edge_index=[2, 8], edge_attr=[8, 8])
+
+print("Node Feature:\n",dataset.x) #Number of nodes: 8, node feature: 13 (8,13)
+print("\nEdge index:\n",dataset.edge_index) #(2,8)
+print("\nEdge attr:\n", dataset.edge_attr) #shape [8,8]
+
+# print(dataset.x) 
+# print(dataset.keys) # 'x', 'edge_attr', 'edge_index'
+# print(dataset.num_nodes) # 8
+# print(dataset.has_isolated_nodes()) #False
+# print(dataset.has_self_loops()) #False
+# print(dataset.is_directed()) #True
+
+
+####################################################### GNN #################################################################
+
+from torch_geometric.nn import MessagePassing
+from torch_geometric.nn import GCNConv, GATConv
+from torch_geometric.data import data
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
 from torch.utils.data import DataLoader
+import torch.optim as optim
 
-# train_dataloader = DataLoader(training_set, batch_size= 16, shuffle= True)
-# test_dataloader = DataLoader(test_set, batch_size= 16, shuffle= True)
+
+# Basically the same as the baseline except we pass edge features 
+
+#
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = "cpu"
+
+
+#### Action input embedding
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+# word_to_index = {"pick":0, "place":1, "pour":2}
+# embs = nn.Embedding(1,3)  ## nn.Embedding(num_embeddings, embedding_dim) 
+# lookup_tensor = torch.tensor([word_to_index["pick"]], dtype=torch.long)
+# pick_embed = embs(lookup_tensor)
+# print(pick_embed)
+
+
+
+#### ActionModel
+
+class ActionModel(nn.Module):
+    def __init__(self, hidden_dim, num_action, node_feature_size, edge_feature_size):
+        super(ActionModel, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.num_action = num_action
+        self.node_feature_size = node_feature_size
+        self.edge_feature_size = edge_feature_size
+        
+        self.convs = [GATConv(in_channels=self.node_feature_size, out_channels=self.hidden_dim, edge_dim=self.edge_feature_size),
+                      GATConv(in_channels=self.hidden_dim, out_channels=self.hidden_dim, edge_dim=self.edge_feature_size)]
+        
+        self.action_layers = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.LeakyReLU(),
+            nn.Linear(self.hidden_dim, self.num_action),
+            nn.LeakyReLU(),
+        )
+        self.node_layers = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.LeakyReLU(),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.LeakyReLU(),
+            nn.Linear(self.hidden_dim, 1),
+        )
+
+    def forward(self, data):
+        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
+        for conv in self.convs[:-1]:
+            x = conv(x=x, edge_index=edge_index, edge_attr=edge_attr) # adding edge features here!
+            x = F.relu(x)
+            x = F.dropout(x, training=self.training)
+        x = self.convs[-1](x, edge_index, edge_attr=edge_attr) # edge features here as well
+        
+        action_input_emb = x.mean()                                    #(x의 피쳐? 들을 합치는과정 avg)
+        node_features = x
+                
+        action_prob = nn.Softmax(self.action_layers(action_input_emb))
+        
+        
+        node_scores = []
+        for feature in node_features:
+            node_scores.append(nn.Sigmoid(self.node_layers(feature)))
+        return action_prob, node_scores   
+
+#test
+hidden_dim = 64
+num_action = 3 # 액션 개수 [pick, place, pour]
+node_feature_size = 13#노드 feature 크기
+edge_feature_size = 3 #노드 사이의 relation 개수 [on, in, attach]
+
+model = ActionModel(hidden_dim, num_action, node_feature_size, edge_feature_size)
+
+test_data = dataset
+
+test_action_prob, test_node_scores = model(test_data)
+
+L_Action = nn.CrossEntropyLoss().to(device)
+L_NodeScore = nn.CrossEntropyLoss().to(device)
+
+action_prob_target = [1, 0, 0]
+node_scores_target = [1, 0, 0, 0, 0, 0, 0, 0]
+
+L_total = L_Action(test_action_prob, action_prob_target) + L_NodeScore(test_node_scores, node_scores_target)
+print(L_total)
+
