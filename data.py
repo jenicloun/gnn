@@ -26,6 +26,9 @@ class LoadDataFrame(Dataset):
         print(f"Torch geometric version: {torch_geometric.__version__}") 
 
 
+
+
+
 ## Dataset
 class MakeDataset(Dataset):
     def __init__(self, root_path):
@@ -65,7 +68,8 @@ class MakeDataset(Dataset):
         # Read csv file to tensor
         nf_csv = pd.read_csv(node_path, index_col=0)
         nf_drop = nf_csv.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
-        self.x = torch.Tensor(nf_drop.values) # dataframe to tensor
+        nf = torch.Tensor(nf_drop.values) # dataframe to tensor
+        self.x = nf.to(dtype=torch.float32)
 
         return self.x
 
@@ -105,13 +109,16 @@ class MakeDataset(Dataset):
         
         tensor_i = torch.tensor(list_i)
         tensor_c = torch.tensor(list_c)
-        edge_index = torch.cat((tensor_i, tensor_c), dim=0).reshape(2,len(tensor_i))
+        edge_tensor = torch.cat((tensor_i, tensor_c), dim=0).reshape(2,len(tensor_i))
+        edge_index = edge_tensor.to(dtype=torch.int64)
          
-
+      
         ############################################################
         ## Edge attribute # on, in, attach 임의로 정해서 만들어 놓기
         # edge_attr = torch.Tensor(ef.values)
-        edge_attr = torch.randint(2,(8,3))
+        edge_rand = torch.randint(2,(8,3))
+        edge_attr = edge_rand.to(dtype=torch.float32)
+    
         
         return edge_index, edge_attr
 
@@ -137,9 +144,14 @@ edge_index, edge_attr = make_data.edge_feature(csv_file='ef0.csv', root_dir='edg
 
 ## Making graph data
 from torch_geometric.data import Data
+
+
+
+
 dataset = Data(x=x, edge_index= edge_index, edge_attr=edge_attr) # Data(x=[8, 13], edge_index=[2, 8], edge_attr=[8, 8])
 
-print("Node Feature:\n",dataset.x) #Number of nodes: 8, node feature: 13 (8,13)
+
+print("Node Feature:\n",type(dataset.x)) #Number of nodes: 8, node feature: 13 (8,13)
 print("\nEdge index:\n",dataset.edge_index) #(2,8)
 print("\nEdge attr:\n", dataset.edge_attr) #shape [8,8]
 
@@ -177,14 +189,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-# word_to_index = {"pick":0, "place":1, "pour":2}
-# embs = nn.Embedding(1,3)  ## nn.Embedding(num_embeddings, embedding_dim) 
-# lookup_tensor = torch.tensor([word_to_index["pick"]], dtype=torch.long)
-# pick_embed = embs(lookup_tensor)
-# print(pick_embed)
-
-
-
 #### ActionModel
 
 class ActionModel(nn.Module):
@@ -209,27 +213,50 @@ class ActionModel(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.LeakyReLU(),
-            nn.Linear(self.hidden_dim, 1),
+            nn.Linear(self.hidden_dim, 1)
         )
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
+        # Data format must match! 
+        # Type 1) x : float32, edge_index : int64, edge_attr: float32  
+        # print(type(x),type(edge_index),type(edge_attr))
+
         for conv in self.convs[:-1]:
-            x = conv(x=x, edge_index=edge_index, edge_attr=edge_attr) # adding edge features here!
+            x = conv(x, edge_index, edge_attr=edge_attr) # adding edge features here!
             x = F.relu(x)
-            x = F.dropout(x, training=self.training)
+            x = F.dropout(x, training = self.training)
         x = self.convs[-1](x, edge_index, edge_attr=edge_attr) # edge features here as well
         
-        action_input_emb = x.mean()                                    #(x의 피쳐? 들을 합치는과정 avg)
-        node_features = x
+        # print("x",x)
+        action_input_emb = x.mean(axis=0)      # x feature를 합치는 과정 / 현재는 mean으로 (추후 변경 예정)
+        # print("actopm=input",action_input_emb)
+        self.node_features = x
                 
-        action_prob = nn.Softmax(self.action_layers(action_input_emb))
+        softmax = nn.Softmax(dim=0)
+        action_prob = softmax(self.action_layers(action_input_emb))
+       
+        # action_prob = self.action_layers(action_input_emb)
+    
+    
+        # action_prob = nn.Softmax(self.action_layers(action_input_emb))
         
         
-        node_scores = []
-        for feature in node_features:
-            node_scores.append(nn.Sigmoid(self.node_layers(feature)))
+        each_node = []
+        for feature in self.node_features:  
+            # print(feature) # feature size : [8,8]
+
+            sig = nn.Sigmoid()
+            # node_scores.append(nn.Sigmoid(self.node_layers(feature)))
+            each_node.append(sig(self.node_layers(feature))) #tensor는 append로 합친 후 concat을 해야 list형식의 tensor형태로 가지고 있는다.
+        
+            node_scores = torch.cat(each_node, dim=0)
+        print("\n[Each node]",each_node)
+
         return action_prob, node_scores   
+  
+
+
 
 #test
 hidden_dim = 64
@@ -238,17 +265,58 @@ node_feature_size = 13#노드 feature 크기
 edge_feature_size = 3 #노드 사이의 relation 개수 [on, in, attach]
 
 model = ActionModel(hidden_dim, num_action, node_feature_size, edge_feature_size)
+model.to(device)
 
-test_data = dataset
+print("\n[Model]:",model(dataset))
 
-test_action_prob, test_node_scores = model(test_data)
+##################################### Calculate Loss / Cross Entropy Loss
 
-L_Action = nn.CrossEntropyLoss().to(device)
-L_NodeScore = nn.CrossEntropyLoss().to(device)
+input_action_prob, input_node_scores = model(dataset)
+print("\n[Input action probability]:",input_action_prob)
+print("\n[Input node scores]:", input_node_scores ,'\n')
 
-action_prob_target = [1, 0, 0]
-node_scores_target = [1, 0, 0, 0, 0, 0, 0, 0]
+# L_Action = nn.CrossEntropyLoss().to(device)
+# L_NodeScore = nn.CrossEntropyLoss().to(device)
 
-L_total = L_Action(test_action_prob, action_prob_target) + L_NodeScore(test_node_scores, node_scores_target)
-print(L_total)
+loss = nn.CrossEntropyLoss() # CrossEntropyLoss 1) Input (N,C) C= number of classes / Target N where each value is 0
+
+
+# target_action_prob = torch.empty(3, dtype=torch.long).random_(2)
+# target_node_scores = torch.empty(8, dtype=torch.long).random_(2)
+target_node_scores = torch.LongTensor([1])
+
+# print("\n[Target action probability]:", target_action_prob)
+
+# L_action = loss(input_action_prob, target_action_prob)
+# print(L_action)
+
+L_nodescore = loss(input_node_scores, target_node_scores)
+
+
+
+# Example of target with class indices
+# loss = nn.CrossEntropyLoss()
+# input = torch.randn(3, 5, requires_grad=True)
+# target = torch.empty(3, dtype=torch.long).random_(5)
+# output = loss(input, target)
+# output.backward()
+
+
+# Example of target with class probabilities
+# input = torch.randn(3, 5, requires_grad=True)
+# target = torch.randn(3, 5).softmax(dim=0)
+# print(input,'\n',target)
+
+# output = loss(input, target)
+# print("Output:",output)
+# output.backward()
+# print("Output:",output)
+
+# target = torch.empty(3, dtype=torch.long).random_(5)
+# print(target)
+
+# L_total = L_action +L_nodescore
+
+# L_total = L_Action(input_action_prob, target_action_prob) + L_NodeScore(input_node_scores, target_node_scores)
+# print("\nLoss Total:",L_total)
 
