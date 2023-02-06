@@ -27,8 +27,6 @@ class LoadDataFrame(Dataset):
 
 
 
-
-
 ## Dataset
 class MakeDataset(Dataset):
     def __init__(self, root_path):
@@ -37,6 +35,7 @@ class MakeDataset(Dataset):
         # Search path
         search_path = os.path.join(os.getcwd(), self.root_path)
         self.search_path = search_path
+        print(search_path)
 
 
     # Creating sample data
@@ -86,16 +85,16 @@ class MakeDataset(Dataset):
     # Getting edge_features - edge_index, edge_attribute
     def edge_feature(self, csv_file, root_dir):
         # Search path
-        edge_path = os.path.join(self.search_path, root_dir, csv_file)
+        edge_index_path = os.path.join(self.search_path, root_dir, 'edge_index', csv_file)
 
         # Read csv file to tensor
-        ef_csv = pd.read_csv(edge_path, index_col=0)
+        ef_csv = pd.read_csv(edge_index_path, index_col=0)
         ef = ef_csv.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
-        
+
 
         # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
         
-        ####################### Recommend to change #################
+        ####################### Recommend to change ################
         ## Edge index
 
         list_i = []
@@ -106,6 +105,7 @@ class MakeDataset(Dataset):
                 if ef.iat[index, column] == 1:    # Recommend to change '.iat' to speed up
                     list_i.append(index)
                     list_c.append(column)
+                    
         
         tensor_i = torch.tensor(list_i)
         tensor_c = torch.tensor(list_c)
@@ -116,13 +116,13 @@ class MakeDataset(Dataset):
         ############################################################
         ## Edge attribute # on, in, attach 임의로 정해서 만들어 놓기
         # edge_attr = torch.Tensor(ef.values)
-        edge_rand = torch.randint(2,(8,3))
-        edge_attr = edge_rand.to(dtype=torch.float32)
-    
+        ea_csv = pd.read_csv('/home/jeni/Desktop/dataloader/dataset/edge_features/edge_attr/init_ea0.csv',index_col=0)
+        ea_drop = ea_csv.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
+        ea = torch.Tensor(ea_drop.values) # dataframe to tensor
+        edge_attr = ea.to(dtype = torch.float32)
         
         return edge_index, edge_attr
 
- 
 
 ## Print
 
@@ -130,8 +130,11 @@ make_data = MakeDataset(root_path='dataset')
 
 
 # print(make_data.rand_sample(folder_name='node_features',file_name='nf1.csv',save_dir='node_features', n=13))
-x = make_data.node_feature(csv_file='nf1.csv', root_dir='node_features')
-edge_index, edge_attr = make_data.edge_feature(csv_file='ef0.csv', root_dir='edge_features')
+x_train = make_data.node_feature(csv_file='nf1.csv', root_dir='node_features')
+edge_index_train, edge_attr_train = make_data.edge_feature(csv_file='ef0.csv', root_dir='edge_features')
+
+x_test = make_data.node_feature(csv_file='nf1.csv', root_dir='node_features')
+edge_index_test, edge_attr_test = make_data.edge_feature(csv_file='ef_pick1.csv', root_dir='edge_features')
 
 # print(edge_attr)
 # data = x, edge_index, edge_attr
@@ -145,15 +148,13 @@ edge_index, edge_attr = make_data.edge_feature(csv_file='ef0.csv', root_dir='edg
 ## Making graph data
 from torch_geometric.data import Data
 
+dataset = Data(x=x_train, edge_index= edge_index_train, edge_attr=edge_attr_train) # Data(x=[8, 13], edge_index=[2, 8], edge_attr=[8, 8])
+dataset2 = Data(x= x_test, edge_index= edge_index_test, edge_attr= edge_attr_test)
 
+print("Node Feature:\n",dataset.x) #Number of nodes: 8, node feature: 13 (8,13)
+print("\nEdge index:\n",dataset.edge_index) #(2,14)
+print("\nEdge attr:\n", dataset.edge_attr) #shape (14,3)
 
-
-dataset = Data(x=x, edge_index= edge_index, edge_attr=edge_attr) # Data(x=[8, 13], edge_index=[2, 8], edge_attr=[8, 8])
-
-
-print("Node Feature:\n",type(dataset.x)) #Number of nodes: 8, node feature: 13 (8,13)
-print("\nEdge index:\n",dataset.edge_index) #(2,8)
-print("\nEdge attr:\n", dataset.edge_attr) #shape [8,8]
 
 # print(dataset.x) 
 # print(dataset.keys) # 'x', 'edge_attr', 'edge_index'
@@ -178,8 +179,7 @@ import torch.optim as optim
 
 # Basically the same as the baseline except we pass edge features 
 
-#
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = "cpu"
 
 
@@ -251,7 +251,7 @@ class ActionModel(nn.Module):
             each_node.append(sig(self.node_layers(feature))) #tensor는 append로 합친 후 concat을 해야 list형식의 tensor형태로 가지고 있는다.
         
             node_scores = torch.cat(each_node, dim=0)
-        print("\n[Each node]",each_node)
+        # print("\n[Each node]",each_node)
 
         return action_prob, node_scores   
   
@@ -260,9 +260,9 @@ class ActionModel(nn.Module):
 
 #test
 hidden_dim = 64
-num_action = 3 # 액션 개수 [pick, place, pour]
-node_feature_size = 13#노드 feature 크기
-edge_feature_size = 3 #노드 사이의 relation 개수 [on, in, attach]
+num_action = 3 # [pick, place, pour]
+node_feature_size = 13 #노드 feature 크기
+edge_feature_size = 6 # 노드 사이의 relation 종류 개수 [on_right,on_left, in_right, in_left, attach, in-grasp]
 
 model = ActionModel(hidden_dim, num_action, node_feature_size, edge_feature_size)
 model.to(device)
@@ -270,53 +270,98 @@ model.to(device)
 print("\n[Model]:",model(dataset))
 
 ##################################### Calculate Loss / Cross Entropy Loss
-
 input_action_prob, input_node_scores = model(dataset)
-print("\n[Input action probability]:",input_action_prob)
-print("\n[Input node scores]:", input_node_scores ,'\n')
+# print("\n[Input action probability]:",input_action_prob)
+# print("\n[Input node scores]:", input_node_scores)
 
-# L_Action = nn.CrossEntropyLoss().to(device)
-# L_NodeScore = nn.CrossEntropyLoss().to(device)
+# CrossEntropyLoss 1) Input (N,C) C= number of classes / Target N where each value is 0
+loss = nn.CrossEntropyLoss() 
 
-loss = nn.CrossEntropyLoss() # CrossEntropyLoss 1) Input (N,C) C= number of classes / Target N where each value is 0
+#Action loss
+# target_action_prob = torch.empty(3).random_(2) #세 개 중에 하나만 1로 설정해야함
+target_action_prob = torch.tensor([1,0,0], dtype=torch.float32) #세개 중에 하나만 1로 설정해야함
+L_action = loss(input_action_prob, target_action_prob)
 
-
-# target_action_prob = torch.empty(3, dtype=torch.long).random_(2)
-# target_node_scores = torch.empty(8, dtype=torch.long).random_(2)
-target_node_scores = torch.LongTensor([1])
-
-# print("\n[Target action probability]:", target_action_prob)
-
-# L_action = loss(input_action_prob, target_action_prob)
-# print(L_action)
-
+#Nodescore loss
+# target_node_scores = torch.empty(8).random_(2)
+target_node_scores = torch.tensor([1,0,0,0,0,0,0,0], dtype=torch.float32) 
 L_nodescore = loss(input_node_scores, target_node_scores)
 
+# Total loss
+L_total = L_action +L_nodescore
 
 
-# Example of target with class indices
-# loss = nn.CrossEntropyLoss()
-# input = torch.randn(3, 5, requires_grad=True)
-# target = torch.empty(3, dtype=torch.long).random_(5)
-# output = loss(input, target)
-# output.backward()
+# Print
+print("\n[Input_action_prob]:", input_action_prob)
+print("\n[Target_action_prob]:", target_action_prob)
+print("\n[L_act]:", L_action)
+print("\n[Input_node_scores]:",input_node_scores)
+print("\n[Target_node_scores]:",target_node_scores)
+print("\n[L_nodescore]:",L_nodescore)
+print("\nLoss Total:",L_total)
+
+# Load data ## 코드 돌아가는지만 test한 것
+train_data = dataset
+test_data = dataset2
 
 
-# Example of target with class probabilities
-# input = torch.randn(3, 5, requires_grad=True)
-# target = torch.randn(3, 5).softmax(dim=0)
-# print(input,'\n',target)
+# Build DataLoader
+batch_size = 64
+trainloader = DataLoader(
+    train_data, batch_size=batch_size
+)
+testloader = DataLoader(
+    test_data, batch_size=batch_size
+)
 
-# output = loss(input, target)
-# print("Output:",output)
-# output.backward()
-# print("Output:",output)
 
-# target = torch.empty(3, dtype=torch.long).random_(5)
-# print(target)
+# Set the Training 
+model = ActionModel(hidden_dim, num_action, node_feature_size, edge_feature_size).to(device)
+data = dataset.to(device)
 
-# L_total = L_action +L_nodescore
+optimizer = torch.optim.Adam(model.parameters(), lr = 0.005, weight_decay=5e-4)
 
-# L_total = L_Action(input_action_prob, target_action_prob) + L_NodeScore(input_node_scores, target_node_scores)
-# print("\nLoss Total:",L_total)
+model.train()
+for epoch in range(10):
+    model.train()
+    optimizer.zero_grad()
+    out = model(data)
+    # CrossEntropyLoss 1) Input (N,C) C= number of classes / Target N where each value is 0
+    loss = nn.CrossEntropyLoss() 
+
+    #Action loss
+    # target_action_prob = torch.empty(3).random_(2) #세 개 중에 하나만 1로 설정해야함
+    target_action_prob = torch.tensor([1,0,0], dtype=torch.float32) #세개 중에 하나만 1로 설정해야함
+    L_action = loss(input_action_prob, target_action_prob)
+
+    #Nodescore loss
+    # target_node_scores = torch.empty(8).random_(2)
+    target_node_scores = torch.tensor([1,0,0,0,0,0,0,0], dtype=torch.float32) 
+    L_nodescore = loss(input_node_scores, target_node_scores)
+
+    # Total loss
+    L_total = L_action +L_nodescore
+    # print(L_total)
+
+    L_action.backward(retain_graph = True) ## Error
+    print(L_action)
+    optimizer.step()
+    
+print(input_action_prob, input_node_scores)
+print(input_node_scores.max(dim=0)) # Extract indices from max value
+
+# lr = 1e-3
+# optimizer = optim.SGD(model.parameters(), lr=lr)
+# # Train the Network
+# epochs = 10
+# for t in range(epochs):
+#     print(f'----- Epoch {t+1} -----')
+#     print(L_action, L_nodescore)
+#     # accuracy, loss = test(testloader, model, loss_fn)
+
+
+
+
+
+
 
