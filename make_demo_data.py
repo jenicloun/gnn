@@ -6,6 +6,7 @@ import numpy as np
 from torch.utils.data import Dataset
 from torch_geometric.data import Dataset
 import time
+import os
 
 class MakeDataset(Dataset):
     def __init__(self, root_path):
@@ -28,9 +29,9 @@ class MakeDataset(Dataset):
         
         return self.ef_csv
 
-    def pick(self, root_dir, csv_file, obj): # obj = ID number
+    def pick(self, csv_file, obj): # obj = ID number
 
-        edge_path = os.path.join(self.search_path, root_dir, csv_file)
+        edge_path = os.path.join(self.search_path, 'edge_features', 'edge_index', csv_file)
         ef_csv = pd.read_csv(edge_path, index_col=0)
         # self.ef = self.ef_csv.at[obj,'8'] 
         # self.ef2 = self.ef_csv.at[7,f'{obj}']
@@ -99,12 +100,90 @@ class MakeDataset(Dataset):
         print("\nEdge attribute is saved")
     
 
+    def place(self,obj1,obj2,csv_file):
+        # path = './dataset/edge_features/edge_index'
+        # file_list = os.listdir(path)
+        # # for i in range(len(file_list)):
+        # #     csv_file = file_list[i]
+        edge_path = os.path.join(self.search_path, 'edge_features','edge_index', csv_file)
+        ef_csv = pd.read_csv(edge_path, index_col=0)
+    
+        place_csv = ef_csv
+        
+        # 'in-grasp' relation (robot hand o -> x) 
+        if place_csv.loc[obj1-1,'9'] == 1 and obj1 != obj2:
+            # Add 'on' relation (Table) 
+            place_csv.loc[obj1-1,f'{obj2}'] = 1
+            place_csv.loc[obj2-1,f'{obj1}'] = 1
+
+            # Remove 'in-grasp' relation (Robot hand)
+            place_csv.loc[obj1-1,'9'] = 0
+            place_csv.loc[8,f'{obj1}'] = 0
+
+            self.place_csv = place_csv
+            return self.place_csv
+
+        else:
+            print("----Cannot place----")
+        # self.obj = obj
+        # self.place_csv = place_csv
+
+        
+            # return self.place_csv
+
+    
     def pick_edge_attr(self):
         pass
+        # list_attr = []
+        # list_r = []
+        # list_l = []
+
+        # # ID drop
+        # ef = self.ef_csv.drop(labels='ID',axis=1) 
+
+        # # Collect index and column which value is 1 / Table column, index = 7
+        # for index in range(len(ef.index)):
+        #     for column in range(len(ef.index)):
+        #         if ef.iat[index, column] == 1:    
+        #             list_attr.append((index, column))
+        # print(list_attr)
+
+    def place_attr(self):
+        list_attr = []
+        list_r = []
+        list_l = []
+
+        # ID drop
+        ef = self.place_csv.drop(labels='ID',axis=1) 
+
+        # Collect index and column which value is 1 / Table column, index = 7
+        for index in range(len(ef.index)):
+            for column in range(len(ef.index)):
+                if ef.iat[index, column] == 1:    
+                    list_attr.append((index, column))
+        print(list_attr)
+
+
+# Object의 범주 구하기
 
 make_data = MakeDataset(root_path='dataset')
-print(make_data.edge_feature(csv_file='ef0.csv', root_dir='edge_features/edge_index'))
-print(make_data.init_edge_attr(save_dir='edge_features/edge_attr'))
+# print(make_data.edge_feature(csv_file='ef0.csv', root_dir='edge_features/edge_index'))
+# print(make_data.pick(csv_file='ef0.csv',obj=5))
+# print(make_data.pick_edge_attr())
+print(make_data.place(obj1=1, obj2=4, csv_file='ef_pick1.csv'))
+print(make_data.place_attr())
+
+# All of the list directories
+# import os
+# path = './dataset/edge_features/edge_index'
+# file_list = os.listdir(path)
+# for i in range(len(file_list)):
+#     print(file_list[i])
+
+
+
+# Make initial edge attribute
+# print(make_data.init_edge_attr(save_dir='edge_features/edge_attr'))
 
 # print(make_data)
 
