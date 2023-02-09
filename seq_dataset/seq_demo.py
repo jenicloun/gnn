@@ -222,8 +222,10 @@ class MakeDataset(Dataset):
         list_edge_index = []
         list_edge_attr = []
 
-
+        # Make nodes
         nodes = self.node_feature['ID'].tolist()
+
+        # Connect edge
         ea = self.edge_attr['ID'].to_list()
         print("[ea]:",ea)
         column = self.edge_attr.columns
@@ -243,11 +245,16 @@ class MakeDataset(Dataset):
 
         g = nx.DiGraph()
         g.add_nodes_from(nodes)
-        g.add_edges_from(list_edge_index)
+        for i in range(len(list_edge_attr)):
+            g.add_edges_from([list_edge_index[i]], label = f'{list_edge_attr[i]}')
         pos = nx.shell_layout(g)
         
-        # edge_labels = nx.get_edge_attributes(g, list_edge_attr)
-        nx.draw(g, pos, with_labels = True)
+
+        
+        edge_labels = nx.get_edge_attributes(g,'label')
+        nx.draw(G= g, pos = pos, with_labels = True)
+        nx.draw_networkx_edge_labels(G= g,pos=pos, edge_labels = edge_labels)
+        
 
         plt.title("Present state")
         plt.show()
