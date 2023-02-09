@@ -33,8 +33,6 @@ class MakeDataset(Dataset):
 
         edge_path = os.path.join(self.search_path, 'edge_features', 'edge_index', csv_file)
         ef_csv = pd.read_csv(edge_path, index_col=0)
-        # self.ef = self.ef_csv.at[obj,'8'] 
-        # self.ef2 = self.ef_csv.at[7,f'{obj}']
 
         # Data type) column :'object', index = 'int64'
         pick_csv = ef_csv
@@ -49,23 +47,8 @@ class MakeDataset(Dataset):
 
         self.obj = obj
         self.pick_csv = pick_csv
-        # return self.ef , ex_time , self.ef2 , self.pick_csv
         return self.pick_csv
 
-    
-    def save_file(self, save_dir):
-
-        # Action) pick
-        final_path = os.path.join(self.search_path, save_dir, 'ef_pick' + str(self.obj) + '.csv')
-        self.pick_csv.to_csv(final_path)
-            
-        # # Action) place
-        # final_path = os.path.join(self.search_path, save_dir, 'ef_place' + str(self.obj) + '.csv')
-        # self.place_csv.to_csv(final_path)
-            
-        # # Action) pour
-        # final_path = os.path.join(self.search_path, save_dir, 'ef_pour' + str(self.obj) + '.csv')
-        # self.pour_csv.to_csv(final_path)
 
     def init_edge_attr(self, save_dir):
         list_attr = []
@@ -163,6 +146,20 @@ class MakeDataset(Dataset):
                     list_attr.append((index, column))
         print(list_attr)
 
+        
+    def save_file(self, save_dir):
+
+        # Action) pick
+        final_path = os.path.join(self.search_path, save_dir, 'ef_pick' + str(self.obj) + '.csv')
+        self.pick_csv.to_csv(final_path)
+            
+        # # Action) place
+        # final_path = os.path.join(self.search_path, save_dir, 'ef_place' + str(self.obj) + '.csv')
+        # self.place_csv.to_csv(final_path)
+            
+        # # Action) pour
+        # final_path = os.path.join(self.search_path, save_dir, 'ef_pour' + str(self.obj) + '.csv')
+        # self.pour_csv.to_csv(final_path)
 
 # Object의 범주 구하기
 
@@ -170,7 +167,7 @@ make_data = MakeDataset(root_path='dataset')
 # print(make_data.edge_feature(csv_file='ef0.csv', root_dir='edge_features/edge_index'))
 # print(make_data.pick(csv_file='ef0.csv',obj=5))
 # print(make_data.pick_edge_attr())
-print(make_data.place(obj1=1, obj2=4, csv_file='ef_pick1.csv'))
+print(make_data.place(obj1=1, obj2=4, csv_file='ef_pick1.csv')) # 지금 순서가 9번 hand가 8번 table위에 있던 1번을 들어서 4번에 놓는 상황
 print(make_data.place_attr())
 
 # All of the list directories
