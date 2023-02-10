@@ -216,9 +216,14 @@ class MakeDataset(Dataset):
         print("\n[Edge index]:\n", edge_index)
         print("\n[Edge_attribute]:\n", edge_attr)
 
-    def make_graph(self):
+
+
+    def make_digraph(self):
         import networkx as nx
         import matplotlib.pyplot as plt
+        import my_networkx as my_nx
+       
+        
         list_edge_index = []
         list_edge_attr = []
 
@@ -242,24 +247,117 @@ class MakeDataset(Dataset):
         print("\n[List edge index]:",list_edge_index)
         print("\n[List edge attribute]:",list_edge_attr)
 
+        plt.figure(figsize=(16,8))
 
         g = nx.DiGraph()
         g.add_nodes_from(nodes)
         for i in range(len(list_edge_attr)):
             g.add_edges_from([list_edge_index[i]], label = f'{list_edge_attr[i]}')
-        pos = nx.shell_layout(g)
-        
 
+
+        pos = nx.shell_layout(g)
+        curved_edges = [edge for edge in g.edges() if reversed(edge) in g.edges()]
+        straight_edges = list(set(g.edges()) - set(curved_edges))
+        arc_rad = 0.20
+        # edge_labels = nx.get_edge_attributes(g,'label')
+
+        edge_labels = dict([((u, v,), f'{d["label"]}\n\n\n{g.edges[(v,u)]["label"]}')
+                for u, v, d in g.edges(data=True) if pos[u][0] > pos[v][0]])
         
-        edge_labels = nx.get_edge_attributes(g,'label')
-        nx.draw(G= g, pos = pos, with_labels = True)
-        nx.draw_networkx_edge_labels(G= g,pos=pos, edge_labels = edge_labels)
+        # edge_labels = dict([((u,v), (d['label']))
+        #      for u,v,d in g.edges(data=True)])
+        print("\n[Edge labels]:",edge_labels)
         
+        # curved_edge_labels = {edge: list_edge_attr[edge] for edge in curved_edges}
+        # straight_edge_labels = {edge: list_edge_attr[edge] for edge in straight_edges}
+    
+        nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, cmap=plt.cm.Blues, alpha = 0.9, node_size = 1000, node_shape='h')
+        nx.draw_networkx_edges(G=g, pos= pos, edgelist= list_edge_index, connectionstyle=f'arc3, rad = {arc_rad}', edge_cmap = plt.cm.Greys, style='dashed')
+        nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
+        nx.draw_networkx_edge_labels(G= g, pos = pos, edge_labels = edge_labels, font_size = 12)
+        # my_nx.my_draw_networkx_edge_labels(G= g, pos=pos,  edge_labels=curved_edge_labels,rotate=False,rad = arc_rad)
+        # nx.draw_networkx_edge_labels(G=g, pos=pos, edge_labels=straight_edge_labels,rotate=False)
+        # nx.draw(G= g, pos = pos, with_labels = True)
+       
+        # # nx.draw_networkx_edge_labels(G= g,pos=pos, edge_labels = edge_labels)
+        # edge_labels=dict([((u,v,),d['label'])
+        #      for u,v,d in g.edges(data=True)])
 
         plt.title("Present state")
         plt.show()
 
+    def make_graph(self):
+        import networkx as nx
+        import matplotlib.pyplot as plt
+        import my_networkx as my_nx
+       
         
+        list_edge_index = []
+        list_edge_attr = []
+
+        # Make nodes
+        nodes = self.node_feature['ID'].tolist()
+
+        # Connect edge
+        ea = self.edge_attr['ID'].to_list()
+        print("[ea]:",ea)
+        column = self.edge_attr.columns
+    
+        for i in range(len(ea)):
+            ei = eval(ea[i])
+            list_edge_index.append(ei)
+            
+            for j in range(len(column)):
+                if self.edge_attr.at[i, column[j]] == 1:
+                    print(type(column[j]))
+                    if column[j] == 'rel_on_right':
+                        attr = column[j].replace('rel_on_right', 'On')
+                    elif column[j] == 'rel_on_left':
+                        attr = column[j].replace('rel_on_left', 'On')
+                    elif column[j] == 'rel_in_grasp':
+                        attr = column[j].replace('rel_in_grasp', 'Grasp')
+                    elif column[j] == 'rel_grasp':
+                        attr = column[j].replace('rel_grasp','Grasp')
+                    else:
+                        attr = column[j]
+                    list_edge_attr.append(attr)
+        
+           
+        print("\n[List edge index]:",list_edge_index)
+        print("\n[List edge attribute]:",list_edge_attr)
+
+        plt.figure(figsize=(16,8))
+
+        g = nx.Graph()
+
+        g.add_nodes_from(nodes)
+        for i in range(len(list_edge_attr)):
+            g.add_edges_from([list_edge_index[i]], label = f'{list_edge_attr[i]}')
+
+
+        pos = nx.shell_layout(g)
+    
+        edge_labels = nx.get_edge_attributes(g,'label')
+        print("\n[Edge labels]:",edge_labels)
+        
+        # curved_edge_labels = {edge: list_edge_attr[edge] for edge in curved_edges}
+        # straight_edge_labels = {edge: list_edge_attr[edge] for edge in straight_edges}
+    
+        nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, cmap=plt.cm.Blues, alpha = 0.9, node_size = 1000, node_shape='h')
+        nx.draw_networkx_edges(G=g, pos= pos, edgelist= list_edge_index, edge_cmap = plt.cm.Greys)
+        nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
+        nx.draw_networkx_edge_labels(G= g, pos = pos, edge_labels = edge_labels, font_size = 12)
+        # my_nx.my_draw_networkx_edge_labels(G= g, pos=pos,  edge_labels=curved_edge_labels,rotate=False,rad = arc_rad)
+        # nx.draw_networkx_edge_labels(G=g, pos=pos, edge_labels=straight_edge_labels,rotate=False)
+        # nx.draw(G= g, pos = pos, with_labels = True)
+       
+        # # nx.draw_networkx_edge_labels(G= g,pos=pos, edge_labels = edge_labels)
+        # edge_labels=dict([((u,v,),d['label'])
+        #      for u,v,d in g.edges(data=True)])
+
+        plt.title("Present state")
+        plt.axis('off')
+        plt.show()
     
 
 ### Checking paths
@@ -267,7 +365,9 @@ class MakeDataset(Dataset):
 # file_path: ['```1.csv`,'```0.csv`]
 
 make_data = MakeDataset(problem = 'stacking_5/1_2_3_4_5', i=0)
-make_data.Call(file1='nf0.csv', file2='ef0.csv', file3='ea0.csv')
+# make_data.Call(file1='nf0.csv', file2='ef0.csv', file3='ea0.csv')
+make_data.Call(file1='nf0.csv', file2='ef1.csv', file3='ea1.csv')
+make_data.Call(file1='nf0.csv', file2='ef3.csv', file3='ea3.csv')
 print(make_data.make_graph())
 
 
