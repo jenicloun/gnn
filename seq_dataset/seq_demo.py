@@ -8,6 +8,7 @@ from torch_geometric.data import Dataset
 import time
 import os
 import natsort
+import random
 
 class MakeDataset(Dataset):
     def __init__(self, problem, i):
@@ -21,6 +22,7 @@ class MakeDataset(Dataset):
         order_file_list = natsort.natsorted(file_list) 
         problem_path = os.path.join(FILEPATH, problem)
 
+        self.FILEPATH = FILEPATH
         self.problem_path = problem_path
         self.root_path = root_path
         self.search_path = search_path
@@ -199,10 +201,10 @@ class MakeDataset(Dataset):
 
         return edge_attr_csv
 
-    def Call(self,file1, file2, file3): # i = range(0,8)
-        nf_path = os.path.join(self.problem_path, self.root_path[2], file1)
-        ef_index_path = os.path.join(self.problem_path, self.root_path[0], file2)
-        ef_attr_path = os.path.join(self.problem_path, self.root_path[1],file3)
+    def Call(self,problem, file1, file2): # i = range(0,8)
+        nf_path = os.path.join(self.FILEPATH,problem , 'node_features/nf0.csv')
+        ef_index_path = os.path.join(self.problem_path, self.root_path[0], file1)
+        ef_attr_path = os.path.join(self.problem_path, self.root_path[1],file2)
 
         node_feature = pd.read_csv(nf_path)
         edge_index = pd.read_csv(ef_index_path)
@@ -300,7 +302,6 @@ class MakeDataset(Dataset):
 
         # Connect edge
         ea = self.edge_attr['ID'].to_list()
-        print("[ea]:",ea)
         column = self.edge_attr.columns
     
         for i in range(len(ea)):
@@ -309,7 +310,6 @@ class MakeDataset(Dataset):
             
             for j in range(len(column)):
                 if self.edge_attr.at[i, column[j]] == 1:
-                    print(type(column[j]))
                     if column[j] == 'rel_on_right':
                         attr = column[j].replace('rel_on_right', 'On')
                     elif column[j] == 'rel_on_left':
@@ -326,7 +326,7 @@ class MakeDataset(Dataset):
         print("\n[List edge index]:",list_edge_index)
         print("\n[List edge attribute]:",list_edge_attr)
 
-        plt.figure(figsize=(16,8))
+        plt.figure(figsize=(10,6))
 
         g = nx.Graph()
 
@@ -358,17 +358,65 @@ class MakeDataset(Dataset):
         plt.title("Present state")
         plt.axis('off')
         plt.show()
+
     
+    def has_duplicates2(self):
+        list_num = [1,2,3,4,5]
+        list_index = []
+        
+        for i in range(890):
+            sample_list = random.sample(list_num,5)
+            list_index.append(sample_list)
+            
+            seen = []
+            unique_list = [x for x in list_index if x not in seen and not seen.append(x)] 
+
+            if len(unique_list) == 120:
+                break
+            
+            # index) int, column) string
+            string_sample = [str(x) for x in sample_list]
+            
+        
+            index_list = [0] + sample_list+ [6,7,8]
+            column_list = ['ID', '0'] + string_sample + ['6','7','8']
+            
+            drop_edge_inx = self.edge_index.reset_index(drop=False, inplace=True)
+            change_edge_inx = drop_edge_inx.set_index(index= index_list)
+            print(change_edge_inx)
+            # change_edge_col = change_edge_inx.reindex(columns= column_list)
+            
+            # print(change_edge_col)
+
+            # change_edge_index.reindex(new_index)
+            # change_edge_index.reindex(columns = new_index)
+            # print("\n[Edge index]:\n", change_edge_index)
+            # print("\n[Edge_attribute]:\n", self.edge_attr)
+            
+        print((len(list_index), len(unique_list)))
+        print("----Re indexing----")
+
+    def createFolder(directory):
+        try:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        except OSError:
+            print ('Error: Creating directory.'  +  directory)
 
 ### Checking paths
 # Root path: ['edge_features/edge_index','edge_features/edge_attr','node_features','action_sequence'] # 0,1,2,3
 # file_path: ['```1.csv`,'```0.csv`]
 
 make_data = MakeDataset(problem = 'stacking_5/1_2_3_4_5', i=0)
-# make_data.Call(file1='nf0.csv', file2='ef0.csv', file3='ea0.csv')
-make_data.Call(file1='nf0.csv', file2='ef1.csv', file3='ea1.csv')
-make_data.Call(file1='nf0.csv', file2='ef3.csv', file3='ea3.csv')
-print(make_data.make_graph())
+a = 2 # a 0~8
+make_data.Call(problem = 'stacking_5',file1='ef' +str(a)+'.csv', file2='ea'+str(a)+'.csv')
+# print(make_data.make_graph())
+# print(make_data.reindex())
+
+
+re_index = make_data.has_duplicates2()
+
+
 
 
 
@@ -399,14 +447,7 @@ print(make_data.make_graph())
 
 
 ### Creating folders ###
-import os
 
-def createFolder(directory):
-    try:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-    except OSError:
-        print ('Error: Creating directory.'  +  directory)
  
 
 
