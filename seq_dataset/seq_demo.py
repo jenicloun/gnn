@@ -27,6 +27,7 @@ class MakeDataset(Dataset):
         self.root_path = root_path
         self.search_path = search_path
         self.order_file_list = order_file_list
+        self.problem = problem
 
         print("[Search path]:",search_path)
         print("\n[Order file list]:",order_file_list)
@@ -165,41 +166,6 @@ class MakeDataset(Dataset):
         print("\n[init_ea0.csv]\n",edge_attr_csv)        
         print("\n----Edge attribute is saved----")
 
-    def make_edge_index_change(self, i):
-        
-        # Search path
-        edge_index_path = os.path.join(self.search_path, self.order_file_list[i])
-
-        # Read csv file to tensor
-        ef = pd.read_csv(edge_index_path, index_col=0)
-
-
-        # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
-        
-        ####################### Recommend to change ################
-        ## Edge index
-        list_attr = []
-        list_i = []
-        list_c = []
-       
-        for index in range(len(ef.columns)):
-            for column in range(len(ef.columns)):
-                if ef.iat[index, column] == 1:    # Recommend to change '.iat' to speed up
-                    list_i.append(index)
-                    list_c.append(column)
-                    list_attr.append((index, column))
-        
-        list_0 = [0 for i in range(len(list_attr))]
-               
-        print(f"\n[Edge attribute: {self.order_file_list[i]}]\n")
-        edge_attr_csv = pd.DataFrame({'ID': list_attr, 'rel_on_right':list_0, 'rel_on_left': list_0, \
-                                      'rel_in_right':list_0, 'rel_in_left': list_0, 'rel_attach':list_0, \
-                                      'rel_in_grasp':list_0, 'rel_grasp':list_0})
-        # Save file
-        # final_path = os.path.join(self.problem_path, self.root_path[1], 'ea'+ str(i) + '.csv')
-        # edge_attr_csv.to_csv(final_path, index = False) # Remove index when file is saved
-
-        return edge_attr_csv
 
     def Call(self,problem, file1, file2): # i = range(0,8)
         nf_path = os.path.join(self.FILEPATH,problem , 'node_features/nf0.csv')
@@ -288,6 +254,7 @@ class MakeDataset(Dataset):
         plt.title("Present state")
         plt.show()
 
+
     def make_graph(self):
         import networkx as nx
         import matplotlib.pyplot as plt
@@ -360,7 +327,7 @@ class MakeDataset(Dataset):
         plt.show()
 
     
-    def has_duplicates2(self):
+    def has_duplicates2(self,problem,a):
         list_num = [1,2,3,4,5]
         list_index = []
         
@@ -374,60 +341,133 @@ class MakeDataset(Dataset):
             if len(unique_list) == 120:
                 break
             
-            # index) int, column) string
-            string_sample = [str(x) for x in sample_list]
-            
+            # index) int - list, column) string - list
+            str_sample = [str(x) for x in sample_list]
+           
         
             index_list = [0] + sample_list+ [6,7,8]
-            column_list = ['ID', '0'] + string_sample + ['6','7','8']
+            column_list = ['ID', '0'] + str_sample + ['6','7','8']
             
-            drop_edge_inx = self.edge_index.reset_index(drop=False, inplace=True)
-            change_edge_inx = drop_edge_inx.set_index(index= index_list)
-            print(change_edge_inx)
-            # change_edge_col = change_edge_inx.reindex(columns= column_list)
+            # Change Index and column
+            self.edge_index["ID"] = index_list
+            self.edge_index.columns = column_list
+            change_edge_index = self.edge_index
+            # print(change_edge_index)
             
-            # print(change_edge_col)
+            folder_name = f"{str_sample[0]}_{str_sample[1]}_{str_sample[2]}_{str_sample[3]}_{str_sample[4]}"
+            self.str_sample = str_sample
+            print(folder_name)
+            print(change_edge_index)
+          
+            # SAVE PATH (edge_index)
+            # save_path = os.path.join(self.FILEPATH,problem,'edge_data',folder_name, self.root_path[0])
+            # save_path = os.path.join(self.FILEPATH,problem,'edge_data',folder_name, self.root_path[1])
+            # createFolder(save_path)
+            # SAVE CSV FILE (edge_index) #root_path[0]인 경우만
+            # save_csv = os.path.join(save_path,'ef' +str(a)+'.csv')
+            # change_edge_index.to_csv(save_csv, index=False) # Without auto-indexing
 
-            # change_edge_index.reindex(new_index)
-            # change_edge_index.reindex(columns = new_index)
-            # print("\n[Edge index]:\n", change_edge_index)
-            # print("\n[Edge_attribute]:\n", self.edge_attr)
-            
         print((len(list_index), len(unique_list)))
         print("----Re indexing----")
+  
 
-    def createFolder(directory):
-        try:
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-        except OSError:
-            print ('Error: Creating directory.'  +  directory)
+    def make_edge_index_change(self): #### ATTRIBUTE 제작
+        for i in range (0,9):
+            # PATH 정리하기
+            read_pt = os.path.join(self.problem_path, self.root_path[1])
+            order_file_list = natsort.natsorted(os.listdir(read_pt)) 
+            read_path = os.path.join(read_pt, order_file_list[i])
+            edge_order = os.path.join(self.FILEPATH,'stacking_5/edge_data')
+            edge_order_files = os.listdir(edge_order)
+
+            for order in edge_order_files:
+                # Search path
+
+                # edge_index_pt = os.path.join(self.FILEPATH,'stacking_5/edge_data', order, self.root_path[0])
+                edge_index_pt = os.path.join(self.FILEPATH,'stacking_5/edge_data', order, self.root_path[0])
+                order_file_list_p = natsort.natsorted(os.listdir(edge_index_pt)) 
+                edge_index_path = os.path.join(edge_index_pt, order_file_list_p[i])
+                
+                # print("\n[Edge Order]", edge_order)
+                # print("\n[Order File lists]", order_file_list)
+                # print("\n[Order File lists edge", order_file_list_p)
+                # print("\n[Read Path]", read_path) #ea
+                # print("\n[Edge Index Path]", edge_index_path) #ef
+
+            
+                # Read csv file to tensor
+                ef = pd.read_csv(edge_index_path, index_col=0)
+                # print(ef)
+                ef_index = ef.index.to_list()
+                # print(ef.at[0,'2'])
+                # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
+                
+                ####################### Recommend to change ################
+                ## Edge index
+                list_attr = []
+                list_i = []
+                list_c = []
+            
+                for ef_index in range(len(ef_index)):
+                    for column in range(len(ef.columns)):
+                        if ef.at[ef_index, str(column)] == 1:    # Recommend to change '.iat' to speed up
+                            list_i.append(ef_index)
+                            list_c.append(column)
+                            list_attr.append((ef_index, column))
+                print(list_attr)
+
+                ea_example = pd.read_csv(read_path,index_col=0)
+                print("\n원본\n",ea_example)
+            
+                
+                ea_example.index = list_attr
+                ea_example.index.name = "ID"
+                edge_attr_csv = ea_example
+                print("\n뉴\n",edge_attr_csv)
+
+            
+                # Save file
+                folder_name = 'ea'+ str(i) + '.csv'
+                save_path = os.path.join(self.FILEPATH,'stacking_5/edge_data',order, self.root_path[1], folder_name)
+                # createFolder(save_path)
+                print(save_path)
+            
+                edge_attr_csv.to_csv(save_path) # Remove index when file is saved
+
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print ('Error: Creating directory.'  +  directory)
 
 ### Checking paths
 # Root path: ['edge_features/edge_index','edge_features/edge_attr','node_features','action_sequence'] # 0,1,2,3
 # file_path: ['```1.csv`,'```0.csv`]
 
-make_data = MakeDataset(problem = 'stacking_5/1_2_3_4_5', i=0)
-a = 2 # a 0~8
-make_data.Call(problem = 'stacking_5',file1='ef' +str(a)+'.csv', file2='ea'+str(a)+'.csv')
-# print(make_data.make_graph())
-# print(make_data.reindex())
-
-
-re_index = make_data.has_duplicates2()
+make_data = MakeDataset(problem = 'stacking_5/ex_1_2_3_4_5', i=0)
 
 
 
+for a in range(0,9): # a (0~8)
+    make_data.Call(problem = 'stacking_5',file1='ef' +str(a)+'.csv', file2='ea'+str(a)+'.csv')
+
+    # Show graph
+    # print(make_data.make_graph())
+
+    # MAKE edge_index folders and .csv files
+    re_index = make_data.has_duplicates2(problem='stacking_5',a=a)
+    print(make_data.make_edge_index_change())
 
 
 
 # print(make_data.edge_feature(i=0))
 # make_data.init_edge_attr()
 
-# print(make_data.make_edge_index_change(i=8))
 
 
 
+    # print(make_data.make_edge_index_change())
 
 # print(make_data.pick(i=2, obj1=1))
 # print(make_data.place(i=1, obj1=1, obj2=2))  # e.g.) obj1=3, obj2=4 -> obj1->obj2
@@ -448,21 +488,17 @@ re_index = make_data.has_duplicates2()
 
 ### Creating folders ###
 
- 
-
-
-
 # # Stacking blocks 
 # for i in range(1,8):
 #     for j in range(1,8):
 #         if i != j:
-#             folder_name = f"{i}_on_{j}"
+#             folder_name = f"{i}_{j}"
 #             break
 
-# createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/action_sequence')
-# createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/edge_features/edge_attr')
-# createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/edge_features/edge_index')
-# createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/node_features')
+# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/action_sequence')
+# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/edge_features/edge_attr')
+# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/edge_features/edge_index')
+# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/node_features')
             
 
 
