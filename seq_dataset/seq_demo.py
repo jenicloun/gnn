@@ -259,7 +259,7 @@ class MakeDataset(Dataset):
         import networkx as nx
         import matplotlib.pyplot as plt
         import my_networkx as my_nx
-       
+        # Weight 부여되면 굵어지게
         
         list_edge_index = []
         list_edge_attr = []
@@ -285,6 +285,8 @@ class MakeDataset(Dataset):
                         attr = column[j].replace('rel_in_grasp', 'Grasp')
                     elif column[j] == 'rel_grasp':
                         attr = column[j].replace('rel_grasp','Grasp')
+                    elif column[j] == 'rel_attach':
+                        attr = column[j].replace('rel_attach','Attach')
                     else:
                         attr = column[j]
                     list_edge_attr.append(attr)
@@ -306,21 +308,14 @@ class MakeDataset(Dataset):
     
         edge_labels = nx.get_edge_attributes(g,'label')
         print("\n[Edge labels]:",edge_labels)
-        
-        # curved_edge_labels = {edge: list_edge_attr[edge] for edge in curved_edges}
-        # straight_edge_labels = {edge: list_edge_attr[edge] for edge in straight_edges}
+
     
         nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, cmap=plt.cm.Blues, alpha = 0.9, node_size = 1000, node_shape='h')
         nx.draw_networkx_edges(G=g, pos= pos, edgelist= list_edge_index, edge_cmap = plt.cm.Greys)
         nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
         nx.draw_networkx_edge_labels(G= g, pos = pos, edge_labels = edge_labels, font_size = 12)
-        # my_nx.my_draw_networkx_edge_labels(G= g, pos=pos,  edge_labels=curved_edge_labels,rotate=False,rad = arc_rad)
-        # nx.draw_networkx_edge_labels(G=g, pos=pos, edge_labels=straight_edge_labels,rotate=False)
-        # nx.draw(G= g, pos = pos, with_labels = True)
-       
-        # # nx.draw_networkx_edge_labels(G= g,pos=pos, edge_labels = edge_labels)
-        # edge_labels=dict([((u,v,),d['label'])
-        #      for u,v,d in g.edges(data=True)])
+   
+
 
         plt.title("Present state")
         plt.axis('off')
@@ -441,6 +436,7 @@ def createFolder(directory):
     except OSError:
         print ('Error: Creating directory.'  +  directory)
 
+
 ### Checking paths
 # Root path: ['edge_features/edge_index','edge_features/edge_attr','node_features','action_sequence'] # 0,1,2,3
 # file_path: ['```1.csv`,'```0.csv`]
@@ -453,11 +449,11 @@ for a in range(0,9): # a (0~8)
     make_data.Call(problem = 'stacking_5',file1='ef' +str(a)+'.csv', file2='ea'+str(a)+'.csv')
 
     # Show graph
-    # print(make_data.make_graph())
+    print(make_data.make_graph())
 
-    # MAKE edge_index folders and .csv files
-    re_index = make_data.has_duplicates2(problem='stacking_5',a=a)
-    print(make_data.make_edge_index_change())
+    ######################### MAKE edge_index folders and .csv files #############################
+    # re_index = make_data.has_duplicates2(problem='stacking_5',a=a)
+    # print(make_data.make_edge_index_change())
 
 
 
