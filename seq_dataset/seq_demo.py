@@ -29,8 +29,14 @@ class MakeDataset(Dataset):
         self.order_file_list = order_file_list
         self.problem = problem
 
-        print("[Search path]:",search_path)
-        print("\n[Order file list]:",order_file_list)
+        # print(FILEPATH)
+        # print(search_path)
+        # print(problem)
+        # print(file_list)
+        # print(order_file_list)
+        # print(problem_path)
+        # print("[Search path]:",search_path)
+        # print("\n[Order file list]:",order_file_list)
 
 
     def edge_feature(self, i): # i -> Number of the file lists e.g.) ['0_ef0.csv', '1_ef_pick4.csv']
@@ -315,11 +321,10 @@ class MakeDataset(Dataset):
         nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
         nx.draw_networkx_edge_labels(G= g, pos = pos, edge_labels = edge_labels, font_size = 12)
    
-
-
         plt.title("Present state")
         plt.axis('off')
         plt.show()
+
 
     
     def has_duplicates2(self,problem,a):
@@ -377,11 +382,9 @@ class MakeDataset(Dataset):
 
             for order in edge_order_files:
                 # Search path
-
-                # edge_index_pt = os.path.join(self.FILEPATH,'stacking_5/edge_data', order, self.root_path[0])
                 edge_index_pt = os.path.join(self.FILEPATH,'stacking_5/edge_data', order, self.root_path[0])
                 order_file_list_p = natsort.natsorted(os.listdir(edge_index_pt)) 
-                edge_index_path = os.path.join(edge_index_pt, order_file_list_p[i])
+                edge_index_path = os.path.join(edge_index_pt, order_file_list_p[i]) 
                 
                 # print("\n[Edge Order]", edge_order)
                 # print("\n[Order File lists]", order_file_list)
@@ -445,15 +448,15 @@ make_data = MakeDataset(problem = 'stacking_5/ex_1_2_3_4_5', i=0)
 
 
 
-for a in range(0,9): # a (0~8)
+for a in range(0,1): # a (0~8)
     make_data.Call(problem = 'stacking_5',file1='ef' +str(a)+'.csv', file2='ea'+str(a)+'.csv')
 
     # Show graph
-    print(make_data.make_graph())
+    # print(make_data.make_graph())
 
     ######################### MAKE edge_index folders and .csv files #############################
-    # re_index = make_data.has_duplicates2(problem='stacking_5',a=a)
-    # print(make_data.make_edge_index_change())
+    re_index = make_data.has_duplicates2(problem='stacking_5',a=a)
+    print(make_data.make_edge_index_change())
 
 
 
