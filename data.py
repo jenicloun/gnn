@@ -5,6 +5,8 @@ import torch_geometric
 import numpy as np
 from torch.utils.data import Dataset
 from torch_geometric.data import Dataset
+from seq_dataset.seq_demo import *
+
 
 ## Check dataframe
 class LoadDataFrame(Dataset):
@@ -54,10 +56,10 @@ class MakeDataset(Dataset):
         # Transform property from list values / Switch only Property_V for while
             nf_csv['Property_V_Velcro'] = concat # Only list can switch values of the column
         
-
         # Save files
             final_path = os.path.join(self.search_path, save_dir, 'nf_ex' + str(i) + '.csv')
             nf_csv.to_csv(final_path)  
+            
             
     # Getting node features
     def node_feature(self, csv_file, root_dir):
@@ -256,8 +258,6 @@ class ActionModel(nn.Module):
         return action_prob, node_scores   
   
 
-
-
 #test
 hidden_dim = 64
 num_action = 3 # [pick, place, pour]
@@ -313,6 +313,7 @@ trainloader = DataLoader(
 testloader = DataLoader(
     test_data, batch_size=batch_size
 )
+
 
 
 # Set the Training 
