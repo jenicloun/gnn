@@ -12,49 +12,35 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 
-class MakeDataset(Dataset):
-    def __init__(self, ex_problem, i):
-        
-        root_path = ['edge_features/edge_index','edge_features/edge_attr','node_features','action_sequence'] # 0,1,2,3
 
+class MakeDataset(Dataset):
+    def __init__(self, problem, example):
         # Search path
         FILEPATH, _ = os.path.split(os.path.realpath(__file__))
-        search_path = os.path.join(FILEPATH, ex_problem, root_path[i])
-        file_list = os.listdir(search_path)
-        order_file_list = natsort.natsorted(file_list) 
-        problem_path = os.path.join(FILEPATH, ex_problem)
+        search_path = os.path.join(FILEPATH, problem, example)
+    
+       
 
         self.FILEPATH = FILEPATH
-        self.problem_path = problem_path
-        self.root_path = root_path
         self.search_path = search_path
-        self.order_file_list = order_file_list
-        self.problem = ex_problem
+        self.problem = problem
+        self.example = example
+      
 
-        # print(FILEPATH)
-        # print(search_path)
-        # print(problem)
-        # print(file_list)
-        # print(order_file_list)
-        # print(problem_path)
-        # print("[Search path]:",search_path)
-        # print("\n[Order file list]:",order_file_list)
-
-
-    def edge_feature(self, i): # i -> Number of the file lists e.g.) ['0_ef0.csv', '1_ef_pick4.csv']
-
-        # Search path
-        edge_path = os.path.join(self.search_path, self.order_file_list[i])
-        print(f"\n[{self.order_file_list[i]}]\n")
-
-        # Read csv file without new index column
-        self.ef_csv = pd.read_csv(edge_path, index_col=0) 
-        return self.ef_csv 
+        print("\n==========================================INIT======================================================")
+        print("\n[File path]",FILEPATH)
+        print("\n[Search_path]",search_path)
+        print("\n[Example]", example)
+        print("\n[Problem]", problem)
+        print("\n==========================================INIT======================================================")
     
+     
 
     def pick(self, file_num, obj1): # obj = ID number
-        
-        edge_path = os.path.join(self.search_path, self.order_file_list[file_num])
+        # Sample
+        sample_inx_path = os.path.join(self.search_path,'edge_index')
+        file_list = natsort.natsorted(os.listdir(sample_inx_path))
+        edge_path = os.path.join(self.search_path, 'edge_index',file_list[file_num])
         ef_csv = pd.read_csv(edge_path, index_col=0)
 
         # Data type) column :'object', index = 'int64'
@@ -72,26 +58,23 @@ class MakeDataset(Dataset):
                 pick_csv.loc[obj1,'0'] = 1
                 pick_csv.loc[0,f'{obj1}'] = 1
 
-                self.obj1 = obj1
+                # self.obj1 = obj1
                 self.pick_csv = pick_csv
+                self.file_list = file_list
                
-                print(f'\n[ef_pick{str(self.obj1)}.csv] \n') 
+                print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
                 return  self.pick_csv
             
             else:
-                print("\n----Check the '.csv' file again----\nFile lists:", self.file_list)
+                print("\n----Check the '.csv' file again----\nFile lists:", file_list[file_num])
             
         else:
             print("\n----Cannot pick this object----\n")
 
         
-    def place(self, file_num, obj1, obj2):
-        edge_path = os.path.join(self.search_path, self.order_file_list[file_num])
-        ef_csv = pd.read_csv(edge_path, index_col=0)
-        self.obj1 = obj1
-        self.obj2 = obj2
-        place_csv = ef_csv
+    def place(self, file_num, obj1, obj2): 
+        place_csv = self.pick_csv
         
         # Check obj1 and obj2 range
         if obj1 in range(1,len(place_csv.columns)-1) and obj2 in range(1,len(place_csv.columns)-1):
@@ -109,13 +92,14 @@ class MakeDataset(Dataset):
                     place_csv.loc[0,f'{obj1}'] = 0
 
                     self.place_csv = place_csv
-                    print(f'\n[ef_place_{str(self.obj1)}_on_{str(self.obj2)}.csv] \n') 
+                    print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
                     return self.place_csv
+                
                 else:
                     print("----Object1 and object2 are equal----")
             else:
-                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list)
+                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[file_num])
         else:
             print("----Cannot place this object----")
     
@@ -123,68 +107,38 @@ class MakeDataset(Dataset):
     def save_file(self, action):
        
         if action == 'pick':
-            action_pick = 'ef_pick'+ str(self.obj1) + '.csv'
+            action_pick = 'ef_'+ str(i) + '.csv'
             self.pick_csv.to_csv(os.path.join(self.search_path, action_pick))
             print("\n", action_pick,"is saved")
 
         elif action == 'place':
-            action_place = 'ef_place' + str(self.obj1) + '_on_'+ str(self.obj2)+ '.csv'
+            action_place = 'ef_ '+ str(i) + '.csv'
             self.place_csv.to_csv(os.path.join(self.search_path, action_place))
             print("\n", action_place,"is saved")
 
         else:
             print("----Wrong action----")
 
-    def init_edge_attr(self):
-        list_attr = []
-        list_r = []
-        list_l = []
 
-        # Dataframe
-        ef = self.ef_csv
+    ##########################Call informations################################
 
-        # Collect index and column which value is 1 / Table column, index = 7
-        for index in range(len(ef.index)):
-            for column in range(len(ef.index)):
-                if ef.iat[index, column] == 1:    
-                    list_attr.append((index, column))
-                    if column == 8:
-                        list_r.append(column)
-                        list_on_table_r = [1 for i in range(len(list_r))]
-                    elif index == 8:
-                        list_l.append(index)
-                        list_on_table_l = [0 for i in range(len(list_l))]
-                        list_on_r = list_on_table_r + list_on_table_l
-                        list_on_l = list_on_table_l +  list_on_table_r 
-                        
+    def sample_data(self, i): # i = range(0,8)
+        # Node feature path
+        nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features/nf0.csv')
 
-                    # Only table has a relationship
-                        list_0 = [0 for i in range(len(list_attr))]
+        # Edge index path
+        index_path = os.path.join(self.search_path, 'edge_index')
+        ei_file_list = natsort.natsorted(os.listdir(index_path))
+        ei_path = os.path.join(index_path,ei_file_list[i])
 
-                        edge_attr_csv = pd.DataFrame({'ID': list_attr, 'rel_on_right':list_on_r, 'rel_on_left': list_on_l, \
-                                                      'rel_in_right':list_0, 'rel_in_left': list_0, 'rel_attach':list_0, \
-                                                      'rel_in_grasp':list_0, 'rel_grasp': list_0})
+        # Edge attribute path
+        attr_path = os.path.join(self.search_path, 'edge_attr')
+        ea_file_list = natsort.natsorted(os.listdir(attr_path))
+        ea_path = os.path.join(attr_path,ea_file_list[i])
 
-    
-                    # Save path
-                        final_path = os.path.join(self.problem_path, self.root_path[1], 'init_ea0.csv')
-                        edge_attr_csv.to_csv(final_path, index = False) # Remove index when file is saved
-                      
-                    
-        print("\n[init_ea0.csv]\n",edge_attr_csv)        
-        print("\n----Edge attribute is saved----")
-
-
-    ##########################Edge attribute################################
-
-    def Call(self,problem, file1, file2): # i = range(0,8)
-        nf_path = os.path.join(self.FILEPATH,problem , 'node_features/nf0.csv')
-        ef_index_path = os.path.join(self.problem_path, self.root_path[0], file1)
-        ef_attr_path = os.path.join(self.problem_path, self.root_path[1],file2)
-
-        node_feature = pd.read_csv(nf_path)
-        edge_index = pd.read_csv(ef_index_path)
-        edge_attr = pd.read_csv(ef_attr_path)
+        node_feature = pd.read_csv(nf_path, index_col=0)
+        edge_index = pd.read_csv(ei_path, index_col=0)
+        edge_attr = pd.read_csv(ea_path, index_col=0)
 
         self.node_feature = node_feature
         self.edge_index = edge_index
@@ -196,8 +150,8 @@ class MakeDataset(Dataset):
 
 
 
-    # Edge index 돌려가며 만들기
-    def has_duplicates2(self,problem,a):
+    ############################################# Make Edge indexes##########################################
+    def make_edge_index(self, i):
         list_num = [1,2,3,4,5]
         list_index = []
 
@@ -214,15 +168,17 @@ class MakeDataset(Dataset):
             unique = len(unique_list) 
                 
             
-            # index) int - list, column) string - list
+            # Data type 맞추기 - index) int - list, column) string - list
             str_sample = [str(x) for x in sample_list]       
             index_list = [0] + sample_list+ [6,7,8]
-            column_list = ['ID', '0'] + str_sample + ['6','7','8']
+            # column_list = ['ID', '0'] + str_sample + ['6','7','8']
+            column_list = ['0'] + str_sample + ['6','7','8']
             
 
             # Change Index and column
-            self.edge_index["ID"] = index_list
-            self.edge_index.columns = column_list
+            self.edge_index.index = index_list # Setting index name = 'ID'
+            self.edge_index.index.name = "ID"
+            self.edge_index.columns = column_list 
             change_edge_index = self.edge_index
             # print(change_edge_index)
             
@@ -232,82 +188,67 @@ class MakeDataset(Dataset):
             print(folder_name)
             print(change_edge_index)
           
-            # SAVE PATH (edge_index)
-            # save_path = os.path.join(self.FILEPATH,problem,'edge_data',folder_name, self.root_path[0])
-            # save_path = os.path.join(self.FILEPATH,problem,'edge_data',folder_name, self.root_path[1])
-            # createFolder(save_path)
-            # SAVE CSV FILE (edge_index) #root_path[0]인 경우만
-            # save_csv = os.path.join(save_path,'ef' +str(a)+'.csv')
-            # change_edge_index.to_csv(save_csv, index=False) # Without auto-indexing
+            # # SAVE PATH (edge_index)
+            save_inx_path = os.path.join(self.FILEPATH, self.problem, 'edge_features',folder_name, 'edge_index')
+            createFolder(save_inx_path)
+            
+            # # SAVE CSV FILE (edge_index) #root_path[0]인 경우만
+            save_csv = os.path.join(save_inx_path,'ei' +str(i)+'.csv')
+            change_edge_index.to_csv(save_csv) 
 
         print((len(list_index), len(unique_list)))
         print("----Re indexing----")
   
 
-    def make_edge_index_change(self,problem): #### ATTRIBUTE 제작
-        for i in range (0,9):
-            # PATH 정리하기
-            prob_path = os.path.join(self.problem_path, self.root_path[1])
-            order_file_list = natsort.natsorted(os.listdir(prob_path)) 
-            read_path = os.path.join(prob_path, order_file_list[i])
-            edge_order = os.path.join(self.FILEPATH, problem, 'edge_data')
-            edge_order_files = os.listdir(edge_order)
+    ############################################# Make Edge attributes##########################################
+    def make_edge_attr(self,i): 
+        # print(ef.at[0,'2'])
+        # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
+        edge_feature_path = os.path.join(self.FILEPATH, self.problem, 'edge_features')
+        prob_file_list = natsort.natsorted(os.listdir(edge_feature_path))
+      
+        # Call info from new edge_index 
+        for prob in prob_file_list:
+            inx_search_path = os.path.join(edge_feature_path, prob, 'edge_index')
+            inx_file_list = natsort.natsorted(os.listdir(inx_search_path))
+            inx_path = os.path.join(inx_search_path, inx_file_list[i])
+            # print(inx_path)
 
-            for order in edge_order_files:
-                # Search path
-                edge_index_pt = os.path.join(self.FILEPATH,problem,'edge_data', order, self.root_path[0])
-                order_file_list_p = natsort.natsorted(os.listdir(edge_index_pt)) 
-                edge_index_path = os.path.join(edge_index_pt, order_file_list_p[i]) 
-                
-                # print("\n[Edge Order]", edge_order)
-                # print("\n[Order File lists]", order_file_list)
-                # print("\n[Order File lists edge", order_file_list_p)
-                # print("\n[Read Path]", read_path) #ea
-                # print("\n[Edge Index Path]", edge_index_path) #ef
-
+            # # # Read csv file to tensor
+            ef = pd.read_csv(inx_path, index_col=0)
+            # print("\n[Edge index]\n",ef)
+            ef_index = ef.index.to_list()
             
-                # Read csv file to tensor
-                ef = pd.read_csv(edge_index_path, index_col=0)
-                # print(ef)
-                ef_index = ef.index.to_list()
-                # print(ef.at[0,'2'])
-                # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
-                
-                ####################### Recommend to change ################
-                ## Edge index
-                list_attr = []
-                list_i = []
-                list_c = []
+            # ####################### Recommend to change ################
+            ## Edge index 정보로 부터 연결된 node 가져오기
+            list_attr = []
+            list_i = []
+            list_c = []
+        
+            for ef_index in range(len(ef_index)):
+                for column in range(len(ef.columns)):
+                    if ef.at[ef_index, str(column)] == 1:    # Recommend to change '.iat' to speed up
+                        list_i.append(ef_index)
+                        list_c.append(column)
+                        list_attr.append((ef_index, column))
+                      
+            # Original data
+            ea_example = self.edge_attr
+            # print("\n[Original]\n",ea_example)
             
-                for ef_index in range(len(ef_index)):
-                    for column in range(len(ef.columns)):
-                        if ef.at[ef_index, str(column)] == 1:    # Recommend to change '.iat' to speed up
-                            list_i.append(ef_index)
-                            list_c.append(column)
-                            list_attr.append((ef_index, column))
-               
+            # Changed data
+            ea_example.index = list_attr
+            ea_example.index.name = "ID"
+            edge_attr_csv = ea_example
+            # print("\n[New]\n",edge_attr_csv)
 
-                ea_example = pd.read_csv(read_path,index_col=0)
-                print("\n원본\n",ea_example)
-            
-                
-                ea_example.index = list_attr
-                ea_example.index.name = "ID"
-                edge_attr_csv = ea_example
-                print("\n뉴\n",edge_attr_csv)
 
-            
-                # Save file
-                folder_name = 'ea'+ str(i) + '.csv'
-                save_path = os.path.join(self.FILEPATH,problem,'edge_data',order, self.root_path[1], folder_name)
-                
-                # Make folder
-                # createFolder(save_path)
-                print(save_path)
-
-                # Save edge attribute files
-                # edge_attr_csv.to_csv(save_path) 
-    
+            # SAVE PATH (edge_attr)
+            save_attr_path = os.path.join(edge_feature_path, prob,'edge_attr')
+            createFolder(save_attr_path)
+            save_csv = os.path.join(save_attr_path,'ea' +str(i)+'.csv')
+            edge_attr_csv.to_csv(save_csv) 
+   
 
     ############################## Make graph ##################################
 
@@ -329,14 +270,12 @@ class MakeDataset(Dataset):
         
         # edge_attr file에서 'rel'이 들어간 문자열 정보 가져오기 ('ID' column까지 붙여서 가져와야 data 불러오기 편함)
         column = ["ID"] + [col[i] for i in range(len(col)) if col[i].find('rel') == 0]    
-         
-        
-        # column = self.edge_attr.columns
     
         for i in range(len(ea)):
             ei = eval(ea[i])
             list_edge_index.append(ei)
-            
+
+            # Relation 보기 간편하게 바꿔줌
             for j in range(len(column)):
                 if self.edge_attr.at[i, column[j]] == 1:
                     if column[j] == 'rel_on_right':
@@ -350,7 +289,7 @@ class MakeDataset(Dataset):
                     elif column[j] == 'rel_attach':
                         attr = column[j].replace('rel_attach','Attach')
                     else:
-                        attr = column[j]
+                        print("----Re-check relations----")
                     list_edge_attr.append(attr)
         
            
@@ -387,71 +326,11 @@ def createFolder(directory):
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
+        else:
+            pass
     except OSError:
         print ('Error: Creating directory.'  +  directory)
 
-
-
-
-### Checking paths
-# Root path: ['edge_features/edge_index','edge_features/edge_attr','node_features','action_sequence'] # 0,1,2,3
-# file_path: ['```1.csv`,'```0.csv`]
-
-make_data = MakeDataset(ex_problem = 'stacking_5/ex_1_2_3_4_5', i=0)
-
-
-
-for a in range(0,1): # a (0~8)
-    make_data.Call(problem = 'stacking_5',file1='ef' +str(a)+'.csv', file2='ea'+str(a)+'.csv')
-
-    # Show graph
-    make_data.make_graph()
-
-    ######################### MAKE edge_index folders and .csv files #############################
-    # re_index = make_data.has_duplicates2(problem='stacking_5',a=a)
-    # make_data.make_edge_index_change(problem='stacking_5')
-
-
-
-# print(make_data.edge_feature(i=0))
-# make_data.init_edge_attr()
-
-
-
-
-
-
-# print(make_data.pick(i=2, obj1=1))
-# print(make_data.place(i=1, obj1=1, obj2=2))  # e.g.) obj1=3, obj2=4 -> obj1->obj2
-
-
-# print(make_data.pick(i=0, obj1= 2))
-
-
-# print(make_data.place(i=3,obj1=2, obj2=3))
-
-
-# make_data.save_file(action='pick')
-# make_data.save_file(action='place')
-
-
-
-
-
-### Creating folders ###
-
-# # Stacking blocks 
-# for i in range(1,8):
-#     for j in range(1,8):
-#         if i != j:
-#             folder_name = f"{i}_{j}"
-#             break
-
-# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/action_sequence')
-# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/edge_features/edge_attr')
-# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/edge_features/edge_index')
-# make_data.createFolder(f'/home/jeni/Desktop/dataloader/seq_dataset/stacking_5/node_features')
-            
 
 
 
