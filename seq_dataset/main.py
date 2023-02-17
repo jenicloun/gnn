@@ -7,7 +7,7 @@ if __name__ == '__main__':
     make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
   
     print(make_data.pick(file_num = 0, obj1 = 1))
-    print(make_data.place(file_num = 0, obj1 = 1, obj2= 4))
+    print(make_data.place(file_num = 0, obj1 = 1, obj2= 3))
   
   
     # for a in range(0,1):

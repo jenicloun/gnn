@@ -34,7 +34,6 @@ class MakeDataset(Dataset):
         print("\n[Problem]", problem)
         print("\n==========================================INIT======================================================")
     
-     
 
     def pick(self, file_num, obj1): # obj = ID number
         # Sample
@@ -102,6 +101,12 @@ class MakeDataset(Dataset):
                 print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[file_num])
         else:
             print("----Cannot place this object----")
+
+
+    def pour(self, file_num, obj1, obj2):
+        # Node feature 따라서 만들고 
+        pass
+        # self.node_feature
     
         
     def save_file(self, action):
