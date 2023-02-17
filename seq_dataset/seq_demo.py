@@ -5,12 +5,14 @@ import torch_geometric
 import numpy as np
 from torch.utils.data import Dataset
 from torch_geometric.data import Dataset
-import time
 import os
 import natsort
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
+import PIL
+
+
 
 
 class MakeDataset(Dataset):
@@ -42,8 +44,10 @@ class MakeDataset(Dataset):
         edge_path = os.path.join(self.search_path, 'edge_index',file_list[file_num])
         ef_csv = pd.read_csv(edge_path, index_col=0)
 
+      
         # Data type) column :'object', index = 'int64'
         pick_csv = ef_csv
+
 
         # Preconditions
         if obj1 in range(1,len(pick_csv.columns)-1): # Not robot-hand and table (The very first:robot-hand, The very last:table)
@@ -58,12 +62,12 @@ class MakeDataset(Dataset):
                 pick_csv.loc[0,f'{obj1}'] = 1
 
                 # self.obj1 = obj1
-                self.pick_csv = pick_csv
+                self.task_csv = pick_csv
                 self.file_list = file_list
-               
+            
                 print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
-                return  self.pick_csv
+                return  self.task_csv
             
             else:
                 print("\n----Check the '.csv' file again----\nFile lists:", file_list[file_num])
@@ -71,9 +75,10 @@ class MakeDataset(Dataset):
         else:
             print("\n----Cannot pick this object----\n")
 
+
         
     def place(self, file_num, obj1, obj2): 
-        place_csv = self.pick_csv
+        place_csv = self.task_csv
         
         # Check obj1 and obj2 range
         if obj1 in range(1,len(place_csv.columns)-1) and obj2 in range(1,len(place_csv.columns)-1):
@@ -90,10 +95,10 @@ class MakeDataset(Dataset):
                     place_csv.loc[obj1,'0'] = 0
                     place_csv.loc[0,f'{obj1}'] = 0
 
-                    self.place_csv = place_csv
+                    self.task_csv = place_csv
                     print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
-                    return self.place_csv
+                    return self.task_csv
                 
                 else:
                     print("----Object1 and object2 are equal----")
@@ -105,9 +110,12 @@ class MakeDataset(Dataset):
 
     def pour(self, file_num, obj1, obj2):
         # Node feature 따라서 만들고 
-        pass
-        # self.node_feature
-    
+        if obj1 == 6 or obj1 ==7 :
+            pour_csv = self.task_csv
+            print("\n",pour_csv)
+        else:
+            print("----Object is not a bowl----")
+
         
     def save_file(self, action):
        
@@ -120,6 +128,9 @@ class MakeDataset(Dataset):
             action_place = 'ef_ '+ str(i) + '.csv'
             self.place_csv.to_csv(os.path.join(self.search_path, action_place))
             print("\n", action_place,"is saved")
+
+        elif action == 'pour':
+            print("\n", action, "is saved")
 
         else:
             print("----Wrong action----")
@@ -152,6 +163,7 @@ class MakeDataset(Dataset):
         # print("\n[Node feature]:\n", node_feature)
         # print("\n[Edge index]:\n", edge_index)
         # print("\n[Edge_attribute]:\n", edge_attr)
+        
 
 
 
@@ -176,13 +188,12 @@ class MakeDataset(Dataset):
             # Data type 맞추기 - index) int - list, column) string - list
             str_sample = [str(x) for x in sample_list]       
             index_list = [0] + sample_list+ [6,7,8]
-            # column_list = ['ID', '0'] + str_sample + ['6','7','8']
             column_list = ['0'] + str_sample + ['6','7','8']
             
 
             # Change Index and column
-            self.edge_index.index = index_list # Setting index name = 'ID'
-            self.edge_index.index.name = "ID"
+            self.edge_index.index = index_list 
+            self.edge_index.index.name = "ID" # Setting index name = 'ID'
             self.edge_index.columns = column_list 
             change_edge_index = self.edge_index
             # print(change_edge_index)
@@ -260,72 +271,163 @@ class MakeDataset(Dataset):
     def make_graph(self):
      
         # Weight 부여되면 굵어지게
-        
         list_edge_index = []
         list_edge_attr = []
 
         # Make nodes
-        nodes = self.node_feature['ID'].tolist()
+        nodes = self.node_feature.index.to_list()
 
         # Connect edge
-        ea = self.edge_attr['ID'].to_list()
+        ea_inx = self.edge_attr.index.to_list()
 
         # edge_attr의 column 데이터 list로 가져오기
         col = self.edge_attr.columns.to_list()
-        
-        # edge_attr file에서 'rel'이 들어간 문자열 정보 가져오기 ('ID' column까지 붙여서 가져와야 data 불러오기 편함)
-        column = ["ID"] + [col[i] for i in range(len(col)) if col[i].find('rel') == 0]    
-    
-        for i in range(len(ea)):
-            ei = eval(ea[i])
-            list_edge_index.append(ei)
 
-            # Relation 보기 간편하게 바꿔줌
-            for j in range(len(column)):
-                if self.edge_attr.at[i, column[j]] == 1:
-                    if column[j] == 'rel_on_right':
-                        attr = column[j].replace('rel_on_right', 'On')
-                    elif column[j] == 'rel_on_left':
-                        attr = column[j].replace('rel_on_left', 'On')
-                    elif column[j] == 'rel_in_grasp':
-                        attr = column[j].replace('rel_in_grasp', 'Grasp')
-                    elif column[j] == 'rel_grasp':
-                        attr = column[j].replace('rel_grasp','Grasp')
-                    elif column[j] == 'rel_attach':
-                        attr = column[j].replace('rel_attach','Attach')
+
+        
+        # edge_attr file에서 'rel'이 들어간 문자열 정보 가져오기 
+        ea_col = [col[i] for i in range(len(col)) if col[i].find('rel') == 0]    
+     
+        
+        #  Relation 보기 간편하게 바꿔줌
+        for i in range(len(ea_inx)):
+            ei = eval(ea_inx[i])
+            list_edge_index.append(ei)
+            for j in range(len(ea_col)):
+                if self.edge_attr.at[ea_inx[i], ea_col[j]] == 1:
+                    if ea_col[j] == 'rel_on_right':
+                        attr = ea_col[j].replace('rel_on_right', 'On')
+                    elif ea_col[j] == 'rel_on_left':
+                        attr = ea_col[j].replace('rel_on_left', 'On')
+                    elif ea_col[j] == 'rel_in_right':
+                        attr = ea_col[j].replace('rel_in_right', 'In')
+                    elif ea_col[j] == 'rel_in_left':
+                        attr = ea_col[j].replace('rel_in_left', 'In')
+                    elif ea_col[j] == 'rel_in_grasp':
+                        attr = ea_col[j].replace('rel_in_grasp', 'Grasp')
+                    elif ea_col[j] == 'rel_grasp':
+                        attr = ea_col[j].replace('rel_grasp','Grasp')
+                    elif ea_col[j] == 'rel_attach':
+                        attr = ea_col[j].replace('rel_attach','Attach')
                     else:
                         print("----Re-check relations----")
                     list_edge_attr.append(attr)
         
            
-        print("\n[List edge index]:",list_edge_index)
+        print("\n[List edge index]:", list_edge_index)
         print("\n[List edge attribute]:",list_edge_attr)
 
-        plt.figure(figsize=(10,6))
+       
 
+        ############################ Make graph ####################
+        import matplotlib.pyplot as plt
+        import networkx as nx
+        import PIL
+
+        
+        # Image URLs for graph nodes
+        icons = {
+            "Robot0": "/home/jeni/Desktop/dataloader/seq_dataset/icons/robot_hand.jpeg",
+            "Block1": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Block2": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Block3": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Block4": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Block5": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Bowl6": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Bowl7": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
+            "Table": "/home/jeni/Desktop/dataloader/seq_dataset/icons/table_icon.jpg",
+        }
+        # Load images
+        images = {k: PIL.Image.open(fname) for k, fname in icons.items()}
+        
+        # Generate graph
         g = nx.Graph()
 
-        g.add_nodes_from(nodes)
+        # Add nodes
+        # g.add_nodes_from(nodes, images = images["Block1"])
+        g.add_node(0, images = images["Robot0"])
+        g.add_node(1, images = images["Block1"])
+        g.add_node(2, images = images["Block2"])
+        g.add_node(3, images = images["Block3"])
+        g.add_node(4, images = images["Block4"])
+        g.add_node(5, images = images["Block5"])
+        g.add_node(6, images = images["Bowl6"])
+        g.add_node(7, images = images["Bowl7"])
+        g.add_node(8, images = images["Table"])
+
+    
+        # Add edges
         for i in range(len(list_edge_attr)):
             g.add_edges_from([list_edge_index[i]], label = f'{list_edge_attr[i]}')
 
+        # POS 1 사진으로 node image 가져오는 것 가능
+        
+        # pos 지정 => x,y 좌표 array값으로 받아서 사용할 수 있음
+        # manually specify node position
+        # pos = nx.spring_layout(g)
+        # pos = nx.shell_layout(g)
+        pos = {
+            0: [0.4, 0.7],
+            1: [0.5, 0.1],
+            2: [0.5, 0.2],
+            3: [0.5, 0.3],
+            4: [0.5, 0.4],
+            5: [0.5, 0.5],
+            6: [0.3, 0.2],
+            7: [0.7, 0.2],
+            8: [0.5, 0]
+        }
 
-        pos = nx.shell_layout(g)
-    
+
+
+        # Get a repreducible layout and create figure
+        
+        fig, ax = plt.subplots() 
+        # Transform from data coordinates
+        tr_figure = ax.transData.transform
+        # Transform from display to figure coordinates
+        tr_axes = fig.transFigure.inverted().transform
+
+        # Select the size of the image
+        icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0])*0.05 # 0.05
+        icon_center = icon_size / 2.0                          # 0.025
         edge_labels = nx.get_edge_attributes(g,'label')
         print("\n[Edge labels]:",edge_labels)
 
-    
-        nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, cmap=plt.cm.Blues, alpha = 0.9, node_size = 1000, node_shape='o')
-        nx.draw_networkx_edges(G=g, pos= pos, edgelist= list_edge_index, edge_cmap = plt.cm.Greys)
-        nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
-        nx.draw_networkx_edge_labels(G= g, pos = pos, edge_labels = edge_labels, font_size = 12)
-   
-        plt.title("Present state")
+        
+        for n in g.nodes:
+            xf, yf = tr_figure(pos[n])
+            xa, ya = tr_axes((xf, yf))
+            # get overlapped axes and plot icon
+            a = plt.axes([xa-icon_center, ya-icon_center , icon_size, icon_size])
+            print(g.nodes[n])
+            a.imshow(g.nodes[n]['images']) # print(g.nodes[n]) #dictionary에 'image' -> 'images'로 변경됨
+            a.axis("off")
+            
+            # nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, cmap=plt.cm.Blues, alpha = 0.9, node_size = 500, node_shape='o')
+            # nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, alpha = 0.9, node_size = 500, node_shape='o')
+            # nx.draw_networkx_edges(G=g, pos= pos, edgelist= list_edge_index, edge_cmap = plt.cm.Greys)
+            # nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
+            nx.draw_networkx_edges(
+                g,
+                pos=pos,
+                ax=ax,
+                edgelist= list_edge_index
+                # min_source_margin=10,
+                # min_target_margin=10,
+            )
+            nx.draw_networkx_edge_labels(G= g, pos = pos, ax=ax, edge_labels = edge_labels, font_size = 12)
+        
+
+        
+        # plt.title("Present state")
         plt.axis('off')
+        # plt.figure(figsize=(10,6))
         plt.show()
 
 
+
+    
 
 def createFolder(directory):
     try:
