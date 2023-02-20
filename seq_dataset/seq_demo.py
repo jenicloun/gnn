@@ -1,7 +1,6 @@
 import os
 import torch
 import pandas as pd
-import torch_geometric
 import numpy as np
 from torch.utils.data import Dataset
 from torch_geometric.data import Dataset
@@ -38,10 +37,11 @@ class MakeDataset(Dataset):
     
 
     def pick(self, file_num, obj1): # obj = ID number
-        # Sample
+        # Choose sample
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
-        edge_path = os.path.join(self.search_path, 'edge_index',file_list[file_num])
+
+        edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
         ef_csv = pd.read_csv(edge_path, index_col=0)
 
       
@@ -61,13 +61,21 @@ class MakeDataset(Dataset):
                 pick_csv.loc[obj1,'0'] = 1
                 pick_csv.loc[0,f'{obj1}'] = 1
 
-                # self.obj1 = obj1
-                self.task_csv = pick_csv
-                self.file_list = file_list
+          
             
                 print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
-                return  self.task_csv
+        
+                file_name = 'ei'+str(file_num)+'.csv'
+                save_path = os.path.join(self.search_path,'test','edge_index')
+                # createFolder(save_path)
+                # pick_csv.to_csv(os.path.join(save_path,file_name))
+                   
+
+                self.file_num = file_num
+                self.pick_csv = pick_csv
+            
+                return pick_csv
             
             else:
                 print("\n----Check the '.csv' file again----\nFile lists:", file_list[file_num])
@@ -77,8 +85,8 @@ class MakeDataset(Dataset):
 
 
         
-    def place(self, file_num, obj1, obj2): 
-        place_csv = self.task_csv
+    def place(self, obj1, obj2): 
+        place_csv = self.pick_csv
         
         # Check obj1 and obj2 range
         if obj1 in range(1,len(place_csv.columns)-1) and obj2 in range(1,len(place_csv.columns)-1):
@@ -95,26 +103,65 @@ class MakeDataset(Dataset):
                     place_csv.loc[obj1,'0'] = 0
                     place_csv.loc[0,f'{obj1}'] = 0
 
-                    self.task_csv = place_csv
+                    
                     print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
-                    return self.task_csv
+
+                    file_name = 'ei'+str(self.file_num+1)+'.csv'
+                    save_path = os.path.join(self.search_path,'test','edge_index')
+                    createFolder(save_path)
+                    place_csv.to_csv(os.path.join(save_path,file_name))
+                    return place_csv
                 
                 else:
                     print("----Object1 and object2 are equal----")
             else:
-                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[file_num])
+                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[self.file_num+1])
         else:
             print("----Cannot place this object----")
 
 
-    def pour(self, file_num, obj1, obj2):
-        # Node feature 따라서 만들고 
-        if obj1 == 6 or obj1 ==7 :
-            pour_csv = self.task_csv
-            print("\n",pour_csv)
+    def pour(self, obj1, obj2):
+        file = 'ei'+str(self.file_num)+'.csv'
+        edge_path = os.path.join(self.search_path, 'test/edge_index',file)
+        pour_csv = pd.read_csv(edge_path, index_col=0)
+        # print(pour_csv,'\n')
+        
+        # Node feature 따라서 만들고 obj1은 bowl이어야 함
+        if obj1 == 6 or obj1 == 7 :
+            placed_obj = 1
+            while placed_obj < len(pour_csv.columns)-1 : # placed_obj 1 ~ 7
+                placed_obj = placed_obj + 1
+
+                # Relation with obj1 (bowl) must be relative
+                if pour_csv.loc[obj1,f'{placed_obj}'] == 1 and pour_csv.loc[placed_obj,f'{obj1}'] == 1:
+                    # print(placed_obj)
+
+                    # Remove relation with obj1
+                    pour_csv.loc[obj1,f'{placed_obj}'] = 0
+                    pour_csv.loc[placed_obj,f'{obj1}'] = 0
+
+                    # Add relation with obj2
+                    pour_csv.loc[obj2,f'{placed_obj}'] = 1
+                    pour_csv.loc[placed_obj,f'{obj2}'] = 1
+                    
+                    # Repeat all applicable 'placed_obj' while if statement is true
+                    continue
+                print(pour_csv)
+               
+                
+                # file_name = 'ei'+str(self.file_num)+'.csv'
+                # save_path = os.path.join(self.search_path,'test','edge_index')
+                # createFolder(save_path)
+                # pour_csv.to_csv(os.path.join(save_path,file_name))
+                
+            else:
+                    print("----Nothing Change----")
+    
         else:
             print("----Object is not a bowl----")
+
+    
 
         
     def save_file(self, action):
@@ -437,7 +484,6 @@ def createFolder(directory):
             pass
     except OSError:
         print ('Error: Creating directory.'  +  directory)
-
 
 
 
