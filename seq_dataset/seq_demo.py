@@ -315,7 +315,7 @@ class MakeDataset(Dataset):
 
     ############################## Make graph ##################################
 
-    def make_graph(self):
+    def make_graph(self, fig_num):
      
         # Weight 부여되면 굵어지게
         list_edge_index = []
@@ -331,7 +331,6 @@ class MakeDataset(Dataset):
         col = self.edge_attr.columns.to_list()
 
 
-        
         # edge_attr file에서 'rel'이 들어간 문자열 정보 가져오기 
         ea_col = [col[i] for i in range(len(col)) if col[i].find('rel') == 0]    
      
@@ -366,30 +365,31 @@ class MakeDataset(Dataset):
 
        
 
-        ############################ Make graph ####################
+        ################### Make graph ####################
         import matplotlib.pyplot as plt
         import networkx as nx
         import PIL
-
+        
         
         # Image URLs for graph nodes
         icons = {
-            "Robot0": "/home/jeni/Desktop/dataloader/seq_dataset/icons/robot_hand.jpeg",
-            "Block1": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Block2": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Block3": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Block4": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Block5": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Bowl6": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Bowl7": "/home/jeni/Desktop/dataloader/seq_dataset/icons/block1.jpeg",
-            "Table": "/home/jeni/Desktop/dataloader/seq_dataset/icons/table_icon.jpg",
+            "Robot0": f"{self.FILEPATH}/icons/robot_hand.jpeg",
+            "Block1": f"{self.FILEPATH}/icons/block1.jpg",
+            "Block2": f"{self.FILEPATH}/icons/block2.jpg",
+            "Block3": f"{self.FILEPATH}/icons/block3.jpg",
+            "Block4": f"{self.FILEPATH}/icons/block4.jpg",
+            "Block5": f"{self.FILEPATH}/icons/block5.jpg",
+            "Bowl6": f"{self.FILEPATH}/icons/bowl6.jpeg",
+            "Bowl7": f"{self.FILEPATH}/icons/bowl7.webp",
+            "Table": f"{self.FILEPATH}/icons/table_icon.jpg",
         }
         # Load images
         images = {k: PIL.Image.open(fname) for k, fname in icons.items()}
         
+        
         # Generate graph
         g = nx.Graph()
-
+    
         # Add nodes
         # g.add_nodes_from(nodes, images = images["Block1"])
         g.add_node(0, images = images["Robot0"])
@@ -401,11 +401,13 @@ class MakeDataset(Dataset):
         g.add_node(6, images = images["Bowl6"])
         g.add_node(7, images = images["Bowl7"])
         g.add_node(8, images = images["Table"])
-
-    
+        
+        
+       
         # Add edges
         for i in range(len(list_edge_attr)):
             g.add_edges_from([list_edge_index[i]], label = f'{list_edge_attr[i]}')
+            
 
         # POS 1 사진으로 node image 가져오는 것 가능
         
@@ -413,68 +415,132 @@ class MakeDataset(Dataset):
         # manually specify node position
         # pos = nx.spring_layout(g)
         # pos = nx.shell_layout(g)
-        pos = {
-            0: [0.4, 0.7],
-            1: [0.5, 0.1],
-            2: [0.5, 0.2],
+        pos0 = {
+            0: [0.2, 0.8],
+            1: [0.3, 0.1],
+            2: [0.4, 0.2],
             3: [0.5, 0.3],
-            4: [0.5, 0.4],
-            5: [0.5, 0.5],
-            6: [0.3, 0.2],
-            7: [0.7, 0.2],
-            8: [0.5, 0]
+            4: [0.6, 0.33],
+            5: [0.7, 0.3],
+            6: [0.8, 0.2],
+            7: [0.9, 0.1],
+            8: [0.6, 0.01]
+        }
+
+        pos1 = {
+            0: [0.6, 0.45],
+            1: [0.3, 0.1],
+            2: [0.4, 0.2],
+            3: [0.5, 0.3],
+            4: [0.6, 0.33],
+            5: [0.7, 0.3],
+            6: [0.8, 0.2],
+            7: [0.9, 0.1],
+            8: [0.6, 0.01]
         }
 
 
 
-        # Get a repreducible layout and create figure
+
+        # pos8 = {
+        #     0: [0.2, 0.3],
+        #     1: [0.5, 0.3],
+        #     2: [0.5, 0.5],
+        #     3: [0.5, 0.7],
+        #     4: [0.5, 0.9],
+        #     5: [0.5, 1.1],
+        #     6: [0.3, 0.2],
+        #     7: [0.7, 0.2],
+        #     8: [0.5, 0.1]
+        # }
+
+
+
         
+        #check the position
+        position = pos1
+
+        # Get a repreducible layout and create figure
         fig, ax = plt.subplots() 
+        
         # Transform from data coordinates
         tr_figure = ax.transData.transform
         # Transform from display to figure coordinates
         tr_axes = fig.transFigure.inverted().transform
 
+       
+        
+       
         # Select the size of the image
-        icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0])*0.05 # 0.05
+        icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0])*0.08 # 0.08
         icon_center = icon_size / 2.0                          # 0.025
         edge_labels = nx.get_edge_attributes(g,'label')
         print("\n[Edge labels]:",edge_labels)
+    
+
+        # Title show
+        title_font = {'fontsize':14, 'fontweight':'bold'}
+        plt.title("Present state", fontdict=title_font)    
+        
 
         
+                
         for n in g.nodes:
-            xf, yf = tr_figure(pos[n])
+            xf, yf = tr_figure(position[n])
             xa, ya = tr_axes((xf, yf))
             # get overlapped axes and plot icon
             a = plt.axes([xa-icon_center, ya-icon_center , icon_size, icon_size])
-            print(g.nodes[n])
+
+            ########################## Spring_layout()일 때 pos 문제가 있음 ###########################
+            # if n == 0:
+            #     a = plt.axes([xa- icon_center+0.82, ya- icon_center+0.385 ,icon_size, icon_size])
+               
+            # else:
+            #     a = plt.axes([xa- icon_center, ya- icon_center ,icon_size, icon_size])
+            ########################################################################################
+               
             a.imshow(g.nodes[n]['images']) # print(g.nodes[n]) #dictionary에 'image' -> 'images'로 변경됨
             a.axis("off")
+             
             
-            # nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, cmap=plt.cm.Blues, alpha = 0.9, node_size = 500, node_shape='o')
-            # nx.draw_networkx_nodes(G=g, pos= pos, nodelist= nodes, alpha = 0.9, node_size = 500, node_shape='o')
-            # nx.draw_networkx_edges(G=g, pos= pos, edgelist= list_edge_index, edge_cmap = plt.cm.Greys)
-            # nx.draw_networkx_labels(G=g, pos=pos, font_family='sans-serif', font_color='black', font_size = 12)
+            # styles = ['filled', 'rounded', 'rounded, filled', 'dashed', 'dotted, bold']
+                
             nx.draw_networkx_edges(
                 g,
-                pos=pos,
-                ax=ax,
-                edgelist= list_edge_index
-                # min_source_margin=10,
-                # min_target_margin=10,
+                pos=position,
+                ax= ax,
+                edgelist= list_edge_index,
+                width=2.5,
+                alpha=1,
+                style='dotted'
             )
-            nx.draw_networkx_edge_labels(G= g, pos = pos, ax=ax, edge_labels = edge_labels, font_size = 12)
-        
+            
+            # for node_pair, relation in edge_labels.items():
+            #     if relation == 'On':
+            #         style = 'dotted'
+                    
+            #     elif relation == 'In':
+            #         style = 'bold'  
+                    
+            #     elif relation == 'Grasp':
+            #         style = 'dashed'
+            
+            
+            nx.draw_networkx_edge_labels(G= g, pos = position, ax=ax, edge_labels = edge_labels, font_size = 10)
+            
 
-        
-        # plt.title("Present state")
-        plt.axis('off')
+       
         # plt.figure(figsize=(10,6))
         plt.show()
 
 
+    ############################################## With velcro objects ################################################
+    # def velcro_stack(self):
+    #     pass
 
-    
+
+
+################################ Creating Folders ##############################################3
 
 def createFolder(directory):
     try:
