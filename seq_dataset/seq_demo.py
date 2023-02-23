@@ -10,6 +10,7 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 import PIL
+import re
 
 
 
@@ -315,17 +316,26 @@ class MakeDataset(Dataset):
 
     ############################## Make graph ##################################
 
-    def make_graph(self, fig_num):
-     
+    def make_graph(self, fig_num, pos):
+        
         # Weight 부여되면 굵어지게
-        list_edge_index = []
+  
         list_edge_attr = []
+        list_edge_on = []
+        list_edge_grasp = []
+        list_node_pair = []
 
         # Make nodes
         nodes = self.node_feature.index.to_list()
 
         # Connect edge
         ea_inx = self.edge_attr.index.to_list()
+        
+        for tar in ea_inx:
+            ret = [int(k) for k in re.split('[^0-9]', tar) if k]
+            list_node_pair.append(tuple(ret))
+        print("\n[List node pair]",list_node_pair)
+        
 
         # edge_attr의 column 데이터 list로 가져오기
         col = self.edge_attr.columns.to_list()
@@ -335,35 +345,35 @@ class MakeDataset(Dataset):
         ea_col = [col[i] for i in range(len(col)) if col[i].find('rel') == 0]    
      
         
-        #  Relation 보기 간편하게 바꿔줌
+        #  Relation 보기 간편하게 바꿔줌 string -> tuple
         for i in range(len(ea_inx)):
-            ei = eval(ea_inx[i])
-            list_edge_index.append(ei)
             for j in range(len(ea_col)):
                 if self.edge_attr.at[ea_inx[i], ea_col[j]] == 1:
                     if ea_col[j] == 'rel_on_right':
                         attr = ea_col[j].replace('rel_on_right', 'On')
+                        list_edge_on.append(attr)
                     elif ea_col[j] == 'rel_on_left':
                         attr = ea_col[j].replace('rel_on_left', 'On')
+                        list_edge_on.append(attr)
                     elif ea_col[j] == 'rel_in_right':
                         attr = ea_col[j].replace('rel_in_right', 'In')
                     elif ea_col[j] == 'rel_in_left':
                         attr = ea_col[j].replace('rel_in_left', 'In')
                     elif ea_col[j] == 'rel_in_grasp':
                         attr = ea_col[j].replace('rel_in_grasp', 'Grasp')
+                        list_edge_grasp.append(attr)
                     elif ea_col[j] == 'rel_grasp':
                         attr = ea_col[j].replace('rel_grasp','Grasp')
+                        list_edge_grasp.append(attr)
                     elif ea_col[j] == 'rel_attach':
                         attr = ea_col[j].replace('rel_attach','Attach')
                     else:
                         print("----Re-check relations----")
                     list_edge_attr.append(attr)
+    
         
-           
-        print("\n[List edge index]:", list_edge_index)
         print("\n[List edge attribute]:",list_edge_attr)
-
-       
+     
 
         ################### Make graph ####################
         import matplotlib.pyplot as plt
@@ -383,12 +393,14 @@ class MakeDataset(Dataset):
             "Bowl7": f"{self.FILEPATH}/icons/bowl7.webp",
             "Table": f"{self.FILEPATH}/icons/table_icon.jpg",
         }
+
         # Load images
         images = {k: PIL.Image.open(fname) for k, fname in icons.items()}
         
         
         # Generate graph
         g = nx.Graph()
+        
     
         # Add nodes
         # g.add_nodes_from(nodes, images = images["Block1"])
@@ -406,8 +418,13 @@ class MakeDataset(Dataset):
        
         # Add edges
         for i in range(len(list_edge_attr)):
-            g.add_edges_from([list_edge_index[i]], label = f'{list_edge_attr[i]}')
-            
+            g.add_edges_from([list_node_pair[i]], label = f'{list_edge_attr[i]}')
+         
+               
+                
+        edge_labels = nx.get_edge_attributes(g,'label')
+        print("\n[Edge labels]:",edge_labels)
+      
 
         # POS 1 사진으로 node image 가져오는 것 가능
         
@@ -415,50 +432,8 @@ class MakeDataset(Dataset):
         # manually specify node position
         # pos = nx.spring_layout(g)
         # pos = nx.shell_layout(g)
-        pos0 = {
-            0: [0.2, 0.8],
-            1: [0.3, 0.1],
-            2: [0.4, 0.2],
-            3: [0.5, 0.3],
-            4: [0.6, 0.33],
-            5: [0.7, 0.3],
-            6: [0.8, 0.2],
-            7: [0.9, 0.1],
-            8: [0.6, 0.01]
-        }
-
-        pos1 = {
-            0: [0.6, 0.45],
-            1: [0.3, 0.1],
-            2: [0.4, 0.2],
-            3: [0.5, 0.3],
-            4: [0.6, 0.33],
-            5: [0.7, 0.3],
-            6: [0.8, 0.2],
-            7: [0.9, 0.1],
-            8: [0.6, 0.01]
-        }
-
-
-
-
-        # pos8 = {
-        #     0: [0.2, 0.3],
-        #     1: [0.5, 0.3],
-        #     2: [0.5, 0.5],
-        #     3: [0.5, 0.7],
-        #     4: [0.5, 0.9],
-        #     5: [0.5, 1.1],
-        #     6: [0.3, 0.2],
-        #     7: [0.7, 0.2],
-        #     8: [0.5, 0.1]
-        # }
-
-
-
         
         #check the position
-        position = pos1
 
         # Get a repreducible layout and create figure
         fig, ax = plt.subplots() 
@@ -469,68 +444,50 @@ class MakeDataset(Dataset):
         tr_axes = fig.transFigure.inverted().transform
 
        
-        
-       
+         
         # Select the size of the image
-        icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0])*0.08 # 0.08
+        icon_size =  0.065 #(ax.get_xlim()[1] - ax.get_xlim()[0])*0.08 # 0.08
         icon_center = icon_size / 2.0                          # 0.025
-        edge_labels = nx.get_edge_attributes(g,'label')
-        print("\n[Edge labels]:",edge_labels)
-    
-
-        # Title show
+      
+        
+        # Show title
         title_font = {'fontsize':14, 'fontweight':'bold'}
-        plt.title("Present state", fontdict=title_font)    
+        plt.title("Present state", fontdict=title_font)  
+        
         
 
+        egrasp = [(u, v) for (u, v, d) in g.edges(data=True) if d["label"] == "Grasp"]
+        eon = [(u, v) for (u, v, d) in g.edges(data=True) if d["label"] == "On"]
+        ein = [(u, v) for (u, v, d) in g.edges(data=True) if d["label"] == "In"]
+        eattach = [(u, v) for (u, v, d) in g.edges(data=True) if d["label"] == "Attach"]
+
+        
+        # Draw edges from edge attributes
+        # styles = ['filled', 'rounded', 'rounded, filled', 'dashed', 'dotted, bold']
+        nx.draw_networkx_edges(G=g, pos=pos, edgelist=egrasp, width=6, alpha=0.5, edge_color="b", style= "dotted")
+        nx.draw_networkx_edges(G=g, pos=pos, edgelist=eon, width=3, alpha=0.5, edge_color="black")
+        nx.draw_networkx_edges(G=g, pos=pos, edgelist=ein, width=4, alpha=0.5, edge_color="r")
+        nx.draw_networkx_edges(G=g, pos=pos, edgelist=eattach, width=4, alpha=0.5, edge_color="r")
+
+        # Draw edge labels from edge attributes
+        nx.draw_networkx_edge_labels(G= g, pos = pos, ax=ax, edge_labels = edge_labels, font_size = 10)
+      
         
                 
         for n in g.nodes:
-            xf, yf = tr_figure(position[n])
+            xf, yf = tr_figure(pos[n])
             xa, ya = tr_axes((xf, yf))
+
             # get overlapped axes and plot icon
             a = plt.axes([xa-icon_center, ya-icon_center , icon_size, icon_size])
-
-            ########################## Spring_layout()일 때 pos 문제가 있음 ###########################
-            # if n == 0:
-            #     a = plt.axes([xa- icon_center+0.82, ya- icon_center+0.385 ,icon_size, icon_size])
-               
-            # else:
-            #     a = plt.axes([xa- icon_center, ya- icon_center ,icon_size, icon_size])
-            ########################################################################################
-               
+            a.set_aspect('equal')
             a.imshow(g.nodes[n]['images']) # print(g.nodes[n]) #dictionary에 'image' -> 'images'로 변경됨
             a.axis("off")
              
             
-            # styles = ['filled', 'rounded', 'rounded, filled', 'dashed', 'dotted, bold']
-                
-            nx.draw_networkx_edges(
-                g,
-                pos=position,
-                ax= ax,
-                edgelist= list_edge_index,
-                width=2.5,
-                alpha=1,
-                style='dotted'
-            )
-            
-            # for node_pair, relation in edge_labels.items():
-            #     if relation == 'On':
-            #         style = 'dotted'
-                    
-            #     elif relation == 'In':
-            #         style = 'bold'  
-                    
-            #     elif relation == 'Grasp':
-            #         style = 'dashed'
-            
-            
-            nx.draw_networkx_edge_labels(G= g, pos = position, ax=ax, edge_labels = edge_labels, font_size = 10)
-            
 
-       
-        # plt.figure(figsize=(10,6))
+        
+        # plt.figure(figsize=(10,8))  
         plt.show()
 
 
