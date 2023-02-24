@@ -30,44 +30,27 @@ class LoadDataFrame(Dataset):
 
 
 ## Dataset
-class MakeDataset(Dataset):
-    def __init__(self, root_path):
-        self.root_path = root_path
-
+class LoadDataset(Dataset):
+    def __init__(self, problem, example):
         # Search path
-        search_path = os.path.join(os.getcwd(), self.root_path)
+        FILEPATH, _ = os.path.split(os.path.realpath(__file__))
+        search_path = os.path.join(FILEPATH, problem, example)
+    
+       
+
+        self.FILEPATH = FILEPATH
         self.search_path = search_path
-        print(search_path)
+        self.problem = problem
+        self.example = example
 
-
-    # Creating sample data
-    def rand_sample(self, file_name, folder_name, save_dir, n):
-
-        # Read node feature datasets
-        node_path = os.path.join(self.search_path, folder_name, file_name)
-        nf_csv = pd.read_csv(node_path, index_col=0)  # index_col drops 'Unnamed' column
-
-        # Make random samples with torch
-        for i in range(n):
-            p = torch.randint(0,2,(5,))
-            z = torch.zeros(3)
-            concat = torch.cat((p,z),0).tolist()
-            
-        # Transform property from list values / Switch only Property_V for while
-            nf_csv['Property_V_Velcro'] = concat # Only list can switch values of the column
-        
-        # Save files
-            final_path = os.path.join(self.search_path, save_dir, 'nf_ex' + str(i) + '.csv')
-            nf_csv.to_csv(final_path)  
-            
             
     # Getting node features
-    def node_feature(self, csv_file, root_dir):
+    def node_feature(self):
         # Search path
-        node_path = os.path.join(self.search_path, root_dir, csv_file)
+        nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features/nf0.csv')
 
         # Read csv file to tensor
-        nf_csv = pd.read_csv(node_path, index_col=0)
+        nf_csv = pd.read_csv(nf_path, index_col=0)
         nf_drop = nf_csv.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
         nf = torch.Tensor(nf_drop.values) # dataframe to tensor
         self.x = nf.to(dtype=torch.float32)
@@ -85,13 +68,15 @@ class MakeDataset(Dataset):
         return part_x
 
     # Getting edge_features - edge_index, edge_attribute
-    def edge_feature(self, csv_file, root_dir):
+    def edge_feature(self, i):
         # Search path
-        edge_index_path = os.path.join(self.search_path, root_dir, 'edge_index', csv_file)
+        index_path = os.path.join(self.search_path, 'edge_index')
+        ei_file_list = natsort.natsorted(os.listdir(index_path))
+        ei_path = os.path.join(index_path,ei_file_list[i])
 
         # Read csv file to tensor
-        ef_csv = pd.read_csv(edge_index_path, index_col=0)
-        ef = ef_csv.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
+        edge_index = pd.read_csv(ei_path, index_col=0)
+        ef = edge_index.drop(labels='ID',axis=1) # drop the "ID" column / axis=0 (row), axis=1(column)
 
 
         # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]

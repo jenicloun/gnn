@@ -163,7 +163,6 @@ class MakeDataset(Dataset):
             print("----Object is not a bowl----")
 
     
-
         
     def save_file(self, action):
        
@@ -185,10 +184,9 @@ class MakeDataset(Dataset):
 
 
     ##########################Call informations################################
-
     def sample_data(self, i): # i = range(0,8)
         # Node feature path
-        nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features/nf0.csv')
+        nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features','nf0.csv')
 
         # Edge index path
         index_path = os.path.join(self.search_path, 'edge_index')
@@ -204,13 +202,17 @@ class MakeDataset(Dataset):
         edge_index = pd.read_csv(ei_path, index_col=0)
         edge_attr = pd.read_csv(ea_path, index_col=0)
 
-        self.node_feature = node_feature
+        self.x = node_feature
         self.edge_index = edge_index
         self.edge_attr = edge_attr
 
         # print("\n[Node feature]:\n", node_feature)
         # print("\n[Edge index]:\n", edge_index)
         # print("\n[Edge_attribute]:\n", edge_attr)
+        # print("\n[Index path]\n", index_path)
+        # print("\n[ei file list]\n", ei_file_list)
+
+        return self.x, self.edge_index, self.edge_attr
         
 
 
@@ -257,7 +259,7 @@ class MakeDataset(Dataset):
             createFolder(save_inx_path)
             
             # # SAVE CSV FILE (edge_index) #root_path[0]인 경우만
-            save_csv = os.path.join(save_inx_path,'ei' +str(i)+'.csv')
+            save_csv = os.path.join(save_inx_path, str(folder_name)+'_ei' +str(i)+'.csv')
             change_edge_index.to_csv(save_csv) 
 
         print((len(list_index), len(unique_list)))
@@ -269,48 +271,50 @@ class MakeDataset(Dataset):
         # print(ef.at[0,'2'])
         # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
         edge_feature_path = os.path.join(self.FILEPATH, self.problem, 'edge_features')
-        prob_file_list = natsort.natsorted(os.listdir(edge_feature_path))
+        order_file_list = natsort.natsorted(os.listdir(edge_feature_path))
       
         # Call info from new edge_index 
-        for prob in prob_file_list:
-            inx_search_path = os.path.join(edge_feature_path, prob, 'edge_index')
+        for order in order_file_list:
+            inx_search_path = os.path.join(edge_feature_path, order, 'edge_index')
             inx_file_list = natsort.natsorted(os.listdir(inx_search_path))
             inx_path = os.path.join(inx_search_path, inx_file_list[i])
-            # print(inx_path)
+            # print("\n[Order]", order)
 
             # # # Read csv file to tensor
             ef = pd.read_csv(inx_path, index_col=0)
             # print("\n[Edge index]\n",ef)
-            ef_index = ef.index.to_list()
-            
-            # ####################### Recommend to change ################
-            ## Edge index 정보로 부터 연결된 node 가져오기
-            list_attr = []
-            list_i = []
-            list_c = []
-        
-            for ef_index in range(len(ef_index)):
-                for column in range(len(ef.columns)):
-                    if ef.at[ef_index, str(column)] == 1:    # Recommend to change '.iat' to speed up
-                        list_i.append(ef_index)
-                        list_c.append(column)
-                        list_attr.append((ef_index, column))
-                      
+           
+            list_attr1 = []
+            list_attr0 = []
+
+            ID_list = list(map(int, ef.columns))
+            for index in range(len(ID_list)):
+                for column in range(len(ID_list)):
+                    if ef.iat[index, column] == 1:   
+                        list_attr1.append((ID_list[index], ID_list[column]))
+                    elif ef.iat[index, column] == 0 and ID_list[index] != ID_list[column]:
+                        list_attr0.append((ID_list[index], ID_list[column]))
+
+            list_attr = list_attr1 + list_attr0
+        # print(list_attr, "length", len(list_attr))
+                  
+
             # Original data
             ea_example = self.edge_attr
-            # print("\n[Original]\n",ea_example)
+            print("\n[Original]\n",ea_example)
             
+
             # Changed data
             ea_example.index = list_attr
             ea_example.index.name = "ID"
             edge_attr_csv = ea_example
-            # print("\n[New]\n",edge_attr_csv)
+            print("\n[New]\n",edge_attr_csv)
 
 
             # SAVE PATH (edge_attr)
-            save_attr_path = os.path.join(edge_feature_path, prob,'edge_attr')
+            save_attr_path = os.path.join(edge_feature_path, order,'edge_attr')
             createFolder(save_attr_path)
-            save_csv = os.path.join(save_attr_path,'ea' +str(i)+'.csv')
+            save_csv = os.path.join(save_attr_path, str(order)+'_ea' +str(i)+'.csv')
             edge_attr_csv.to_csv(save_csv) 
    
 
@@ -326,7 +330,7 @@ class MakeDataset(Dataset):
         list_node_pair = []
 
         # Make nodes
-        nodes = self.node_feature.index.to_list()
+        nodes = self.x.index.to_list()
 
         # Connect edge
         ea_inx = self.edge_attr.index.to_list()
@@ -335,6 +339,7 @@ class MakeDataset(Dataset):
             ret = [int(k) for k in re.split('[^0-9]', tar) if k]
             list_node_pair.append(tuple(ret))
         print("\n[List node pair]",list_node_pair)
+        
         
 
         # edge_attr의 column 데이터 list로 가져오기
@@ -484,8 +489,6 @@ class MakeDataset(Dataset):
             a.imshow(g.nodes[n]['images']) # print(g.nodes[n]) #dictionary에 'image' -> 'images'로 변경됨
             a.axis("off")
              
-            
-
         
         # plt.figure(figsize=(10,8))  
         plt.show()

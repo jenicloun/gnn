@@ -4,7 +4,8 @@ from seq_demo import *
 
 
 if __name__ == '__main__':
-    make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
+    # make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
+    
 
     ## Saving files
     # FILEPATH, _ = os.path.split(os.path.realpath(__file__))
@@ -12,7 +13,6 @@ if __name__ == '__main__':
     # save_path = os.path.join(FILEPATH,'stacking_velcro2',file_name, 'node_features')
     # save_path = os.path.join(FILEPATH,'stacking_velcro2',file_name, 'edge_index')
     # save_path = os.path.join(FILEPATH,'stacking_velcro2',file_name, 'edge_attr')
-
     # createFolder(save_path)
   
 
@@ -145,20 +145,20 @@ if __name__ == '__main__':
     
     position = [pos0, pos1, pos2, pos3, pos4, pos5, pos6, pos7, pos8]
 
-
+    make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
   
-    for a in range(0, 1):
+    for a in range(0, 9):
     ################### Call sample data ####################
         # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
         print(f"\n[[[[[Task{a}]]]]]")
-        make_data.sample_data(i=a) 
+        print(make_data.sample_data(i=a) )
         # # print(make_data.pick(file_num = 0, obj1 = 5))
         # # print(make_data.place(obj1 = 5, obj2=6)) #file_num = 1     
         # # print(make_data.pour(obj1= 6, obj2=7))
         # # print(make_data.place(obj1 = 6, obj2=2))
-        make_data.make_graph(fig_num=a, pos = position[a])
+        # make_data.make_graph(fig_num=a, pos = position[a])
         # make_data.make_edge_index(i=a) 
-        # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
+        make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
 
 # plt.figure(figsize=)
 
