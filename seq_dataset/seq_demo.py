@@ -42,7 +42,8 @@ class MakeDataset(Dataset):
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
 
-        edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
+        # edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
+        edge_path = os.path.join(self.search_path, 'edge_index',file_list[file_num])
         ef_csv = pd.read_csv(edge_path, index_col=0)
 
       
@@ -67,10 +68,10 @@ class MakeDataset(Dataset):
                 print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
         
-                file_name = 'ei'+str(file_num)+'.csv'
-                save_path = os.path.join(self.search_path,'test','edge_index')
-                # createFolder(save_path)
-                # pick_csv.to_csv(os.path.join(save_path,file_name))
+                file_name = 'ei'+str(file_num+1)+'.csv'
+                save_path = os.path.join(self.search_path,'edge_index')
+                createFolder(save_path)
+                pick_csv.to_csv(os.path.join(save_path,file_name))
                    
 
                 self.file_num = file_num
@@ -108,8 +109,8 @@ class MakeDataset(Dataset):
                     print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
 
-                    file_name = 'ei'+str(self.file_num+1)+'.csv'
-                    save_path = os.path.join(self.search_path,'test','edge_index')
+                    file_name = 'ei'+str(self.file_num+2)+'.csv'
+                    save_path = os.path.join(self.search_path,'edge_index')
                     createFolder(save_path)
                     place_csv.to_csv(os.path.join(save_path,file_name))
                     return place_csv
@@ -122,17 +123,15 @@ class MakeDataset(Dataset):
             print("----Cannot place this object----")
 
 
-    def pour(self, obj1, obj2):
-        file = 'ei'+str(self.file_num)+'.csv'
-        edge_path = os.path.join(self.search_path, 'test/edge_index',file)
+    def pour(self, file_num, obj1, obj2):
+        file = 'ei'+str(file_num)+'.csv'
+        edge_path = os.path.join(self.search_path, 'edge_index',file)
         pour_csv = pd.read_csv(edge_path, index_col=0)
-        # print(pour_csv,'\n')
+        print("\n[Original]\n",pour_csv,'\n')
         
         # Node feature 따라서 만들고 obj1은 bowl이어야 함
         if obj1 == 6 or obj1 == 7 :
-            placed_obj = 1
-            while placed_obj < len(pour_csv.columns)-1 : # placed_obj 1 ~ 7
-                placed_obj = placed_obj + 1
+            for placed_obj in range(1,7):  # placed_obj 1 ~ 7
 
                 # Relation with obj1 (bowl) must be relative
                 if pour_csv.loc[obj1,f'{placed_obj}'] == 1 and pour_csv.loc[placed_obj,f'{obj1}'] == 1:
@@ -148,23 +147,20 @@ class MakeDataset(Dataset):
                     
                     # Repeat all applicable 'placed_obj' while if statement is true
                     continue
-                print(pour_csv)
+            print("\n[Change]\n",pour_csv)
                
-                
-                # file_name = 'ei'+str(self.file_num)+'.csv'
-                # save_path = os.path.join(self.search_path,'test','edge_index')
-                # createFolder(save_path)
-                # pour_csv.to_csv(os.path.join(save_path,file_name))
-                
-            else:
-                    print("----Nothing Change----")
+            
+            file_name = 'ei'+str(file_num+1)+'.csv'
+            save_path = os.path.join(self.search_path,'edge_index')
+            createFolder(save_path)
+            pour_csv.to_csv(os.path.join(save_path,file_name))
     
         else:
             print("----Object is not a bowl----")
 
     
         
-    def save_file(self, action):
+    def save_file(self, action,i):
        
         if action == 'pick':
             action_pick = 'ef_'+ str(i) + '.csv'
@@ -177,10 +173,61 @@ class MakeDataset(Dataset):
             print("\n", action_place,"is saved")
 
         elif action == 'pour':
+            action_pour = 'ef_ '+ str(i) + '.csv'
+            self.pour_csv.to_csv(os.path.join(self.search_path, action_place))
             print("\n", action, "is saved")
 
         else:
             print("----Wrong action----")
+
+
+    def init_edge_attr(self, file_num):
+    
+        list_attr = []
+
+        # Dataframe
+        file = 'ei'+str(file_num)+'.csv'
+        edge_path = os.path.join(self.search_path, 'edge_index',file)
+        ef = pd.read_csv(edge_path, index_col=0)
+           
+        list_attr1 = []
+        list_attr0 = []
+
+        ID_list = list(map(int, ef.columns))
+        for index in range(len(ID_list)):
+            for column in range(len(ID_list)):
+                if ef.iat[index, column] == 1:   
+                    list_attr1.append((ID_list[index], ID_list[column]))
+                elif ef.iat[index, column] == 0 and ID_list[index] != ID_list[column]:
+                    list_attr0.append((ID_list[index], ID_list[column]))
+
+        list_attr = list_attr1 + list_attr0
+
+        print("[list1]",list_attr1,'\n')
+        print(list_attr, "length", len(list_attr))
+
+        list_0 = [0 for i in range(len(list_attr1))]
+
+        edge_attr0_csv = pd.DataFrame({'ID': list_attr1, 'rel_on_right':list_0, 'rel_on_left': list_0, \
+                                        'rel_in_right':list_0, 'rel_in_left': list_0, 'rel_attach':list_0, \
+                                        'rel_in_grasp':list_0, 'rel_grasp': list_0, 'pos_x': list_0, 'pos_y': list_0, 'pos_z': list_0, \
+                                        'pos_roll':list_0, 'pos_pitch':list_0, 'pos_yaw':list_0})
+
+        edge_attr0_csv = edge_attr0_csv.set_index("ID")
+
+
+
+        # SAVE PATH (edge_attr)
+        save_attr_path = os.path.join(self.search_path, 'edge_attr')
+        createFolder(save_attr_path)
+        file = 'ea'+str(file_num)+'.csv'
+        save_csv = os.path.join(save_attr_path, file)
+        edge_attr0_csv.to_csv(save_csv) 
+                    
+        print("\n[init_ea0.csv]\n",edge_attr0_csv)        
+        print("\n----Edge attribute is saved----")
+
+
 
 
     ##########################Call informations################################
@@ -296,7 +343,7 @@ class MakeDataset(Dataset):
                         list_attr0.append((ID_list[index], ID_list[column]))
 
             list_attr = list_attr1 + list_attr0
-        # print(list_attr, "length", len(list_attr))
+            # print(list_attr, "length", len(list_attr))
                   
 
             # Original data
@@ -337,7 +384,11 @@ class MakeDataset(Dataset):
         
         for tar in ea_inx:
             ret = [int(k) for k in re.split('[^0-9]', tar) if k]
-            list_node_pair.append(tuple(ret))
+            # print(ret)
+            if ret != [0]:
+                list_node_pair.append(tuple(ret))
+            else:
+                pass
         print("\n[List node pair]",list_node_pair)
         
         
@@ -348,6 +399,8 @@ class MakeDataset(Dataset):
 
         # edge_attr file에서 'rel'이 들어간 문자열 정보 가져오기 
         ea_col = [col[i] for i in range(len(col)) if col[i].find('rel') == 0]    
+
+        print("\n[ea col]",ea_col)
      
         
         #  Relation 보기 간편하게 바꿔줌 string -> tuple
@@ -513,9 +566,119 @@ def createFolder(directory):
 
 
 
+stack_pos0 = {
+    0: [0.33, 0.35],
+    1: [0.33, 0.28],
+    2: [0.40, 0.35],
+    3: [0.67, 0.28],
+    4: [0.60, 0.35],
+    5: [0.5, 0.38],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+stack_pos1 = {
+    0: [0.60, 0.5],
+    1: [0.33, 0.28],
+    2: [0.40, 0.35],
+    3: [0.67, 0.28],
+    4: [0.60, 0.35],
+    5: [0.5, 0.38],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+stack_pos2 = {
+    0: [0.65, 0.45],
+    1: [0.33, 0.28],
+    2: [0.40, 0.35],
+    3: [0.6, 0.35],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+stack_pos3 = {
+    0: [0.6, 0.5],
+    1: [0.33, 0.28],
+    2: [0.40, 0.35],
+    3: [0.6, 0.35],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
 
 
+stack_pos4 = {
+    0: [0.6, 0.5],
+    1: [0.33, 0.28],
+    2: [0.40, 0.35],
+    3: [0.5, 0.7],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
 
+stack_pos5 = {
+    0: [0.4, 0.6],
+    1: [0.33, 0.28],
+    2: [0.40, 0.35],
+    3: [0.5, 0.7],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+
+stack_pos6 = {
+    0: [0.4, 0.6],
+    1: [0.35, 0.3],
+    2: [0.5, 0.9],
+    3: [0.5, 0.7],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+
+stack_pos7 = {
+    0: [0.35, 0.6],
+    1: [0.35, 0.3],
+    2: [0.5, 0.9],
+    3: [0.5, 0.7],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+
+stack_pos8 = {
+    0: [0.35, 0.5],
+    1: [0.5, 1.1],
+    2: [0.5, 0.9],
+    3: [0.5, 0.7],
+    4: [0.5, 0.5],
+    5: [0.5, 0.3],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+
+stack_pos = [stack_pos0, stack_pos1, stack_pos2, stack_pos3, stack_pos4, stack_pos5, stack_pos6, stack_pos7, stack_pos8]
 
 
 

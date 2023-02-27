@@ -130,7 +130,6 @@ if __name__ == '__main__':
     ## Print
     make_data = LoadDataset(problem = 'stacking_5')
   
-
     ######Train
     x_train = make_data.node_feature(i=0) # nf0.csv
     edge_index_train = make_data.edge_index(order= '1_2_3_4_5', i=0) # ei0.csv
