@@ -37,7 +37,7 @@ if __name__ == '__main__':
     make_data = MakeDataset(problem = 'mixing_5', example = 'mix_ex_1_2_3_4_5')
     # make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
   
-    for a in range(0, 9): # stacking (0,9) 0~8, mixing (0,12) 0~11
+    for a in range(0, 12): # stacking (0,9) 0~8, mixing (0,12) 0~11
     ################### Call sample data ####################
         # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
         print(f"\n[[[[[Task{a}]]]]]")
@@ -46,9 +46,9 @@ if __name__ == '__main__':
 
 
         ### Checking graphs
-        make_data.make_graph(fig_num=a, pos = stack_pos[a])
+        # make_data.make_graph(fig_num=a, pos = mix_pos[a])
         # make_data.make_edge_index(i=a) 
-        # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
+        make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
 
         # # Object 5
         # print(make_data.pick(file_num = 0, obj1 = 5))
