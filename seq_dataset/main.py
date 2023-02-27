@@ -48,7 +48,7 @@ if __name__ == '__main__':
         ### Checking graphs
         # make_data.make_graph(fig_num=a, pos = mix_pos[a])
         # make_data.make_edge_index(i=a) 
-        make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
+        # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
 
         # # Object 5
         # print(make_data.pick(file_num = 0, obj1 = 5))
