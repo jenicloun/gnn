@@ -31,25 +31,41 @@ if __name__ == '__main__':
     # print(make_data.pour(file_num = 0, obj1 = 6 , obj2 = 7))
 
 
-    
-
-
-    make_data = MakeDataset(problem = 'mixing_5', example = 'mix_ex_1_2_3_4_5')
+    make_data = MakeDataset(problem= 'stacking_v2', example= 'v2_ex_1_2_34_5')
+    # make_data = MakeDataset(problem = 'mixing_5', example = 'mix_ex_1_2_3_4_5')
     # make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
-  
-    for a in range(0, 12): # stacking (0,9) 0~8, mixing (0,12) 0~11
-    ################### Call sample data ####################
-        # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
-        print(f"\n[[[[[Task{a}]]]]]")
-        print(make_data.sample_data(i=a))
-        #[Warning]#### 0으로 시작 # print(make_data.init_edge_attr(file_num = a))
+
+    ### Make initial edge index
+    make_data.init_edge_index()
 
 
-        ### Checking graphs
-        # make_data.make_graph(fig_num=a, pos = mix_pos[a])
-        # make_data.make_edge_index(i=a) 
-        # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
 
+    # make_data.create_node_features()
+    
+    # for a in range(0, 1): # stacking (0,9) 0~8, mixing (0,12) 0~11
+        ################### Call sample data ####################
+            # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
+    #     print(f"\n[[[[[Task{a}]]]]]")
+    #     print(make_data.sample_data(i=a))
+    #     #[Warning]#### 0으로 시작 # print(make_data.init_edge_attr(file_num = a))
+
+
+    #     ### Checking graphs
+    #     # make_data.make_graph(fig_num=a, pos = mix_pos[a])
+    #     # make_data.make_edge_index(i=a) 
+    #     # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
+    #     action_v2_stacking = ['pick','place','pick','place','pick','place','pick','place']
+    # ############################## [Velcro2] ##############################
+    print(make_data.pick(file_num= 0, obj1= 3))
+    print(make_data.place(obj1=3, obj2=4))
+    print(make_data.attach(obj1=3, obj2=4))
+
+    # print(make_data.pick(file_num=2, obj1= ))
+
+
+
+
+    ############################## [Mixing] ##############################
         # # Object 5
         # print(make_data.pick(file_num = 0, obj1 = 5))
         # print(make_data.place(obj1 = 5, obj2=6))
@@ -73,7 +89,7 @@ if __name__ == '__main__':
         # # Pour object 6 to 7
         # print(make_data.pour(file_num= 10, obj1= 6, obj2=7))
 
-
+    ######################################################################
 
         # ### Checking graphs
         # # make_data.make_graph(fig_num=a, pos = position[a])

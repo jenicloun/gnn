@@ -21,7 +21,6 @@ class MakeDataset(Dataset):
         FILEPATH, _ = os.path.split(os.path.realpath(__file__))
         search_path = os.path.join(FILEPATH, problem, example)
     
-       
 
         self.FILEPATH = FILEPATH
         self.search_path = search_path
@@ -36,6 +35,51 @@ class MakeDataset(Dataset):
         print("\n[Problem]", problem)
         print("\n==========================================INIT======================================================")
     
+
+    def create_node_features(self):
+        pass
+
+
+
+
+        # Ground = pd.read_csv("/home/jeni/Desktop/gcn/box_test1.csv")
+        # print(Ground)
+
+        # #### parsing relation
+
+        # parse_r = Ground[["ID","Relation_In","Relation_On","Relation_Attach"]]
+
+        # # print(parse_g)
+
+        # splited1 = parse_r["Relation_In"].str.split(',',expand=True)
+        # splited2 = parse_r["Relation_On"].str.split(',',expand=True)
+        # splited3 = parse_r["Relation_Attach"].str.split(',',expand=True)
+
+        # # print(splited1)
+
+        # splited1.rename(columns= lambda x: "Relation_In_" + str(x), inplace=True) # Switch int to str
+        # splited2.rename(columns= lambda x: "Relation_On_" + str(x), inplace=True)
+        # splited3.rename(columns= lambda x: "Relation_Attach_" + str(x), inplace=True)
+
+        # gt = pd.concat([Ground["ID"],splited1,splited2,splited3], axis=1)
+
+        # # fill "NaN" data as "0"
+        # df = gt.fillna(0)
+
+        # # df.to_csv('/home/jeni/Desktop/gcn/gt_box_test.csv')
+
+        # print("\nGT:",df)
+
+
+        # ### parsing nodes
+
+        # parse_n = Ground[["ID","Type","Property_V","Property_C","Property_G","Property_Color"]]
+        # print(parse_n)
+
+
+        # node_features = pd.get_dummies(parse_n)
+        # print(node_features)
+
 
     def pick(self, file_num, obj1): # obj = ID number
         # Choose sample
@@ -52,12 +96,12 @@ class MakeDataset(Dataset):
 
 
         # Preconditions
-        if obj1 in range(1,len(pick_csv.columns)-1): # Not robot-hand and table (The very first:robot-hand, The very last:table)
+        if obj1 != 0 and obj1 != 8: # Not robot-hand and table (The very first:robot-hand, The very last:table)
             if pick_csv.loc[obj1,'0'] == 0 and pick_csv.loc[0,f'{obj1}'] == 0: # obj1 is has not relationship with robot-hand
 
                 # Remove 'on' relation (Table) 
-                pick_csv.loc[obj1,f'{len(pick_csv.columns)-1}'] = 0
-                pick_csv.loc[len(pick_csv.columns)-1,f'{obj1}'] = 0
+                pick_csv.loc[obj1,'8'] = 0
+                pick_csv.loc[8,f'{obj1}'] = 0
 
                 # Add 'in-grasp' relation (Robot-hand)
                 pick_csv.loc[obj1,'0'] = 1
@@ -91,13 +135,13 @@ class MakeDataset(Dataset):
         place_csv = self.pick_csv
         
         # Check obj1 and obj2 range
-        if obj1 in range(1,len(place_csv.columns)-1) and obj2 in range(1,len(place_csv.columns)-1):
+        if obj1 != 0 and obj1 != 8 and obj2 != 0 and obj2 != 8:
             # 'in-grasp' relation (Robot hand O -> X) , object are not equal
             if place_csv.loc[obj1,'0'] == 1 and place_csv.loc[0,f'{obj1}'] == 1:
                 # Check obj1 and obj2 are equal
                 if obj1 != obj2:
 
-                    # Add 'on' relation (Table) 
+                    # Add 'on' relation with obj1 and obj2
                     place_csv.loc[obj1,f'{obj2}'] = 1
                     place_csv.loc[obj2,f'{obj1}'] = 1
 
@@ -108,11 +152,15 @@ class MakeDataset(Dataset):
                     
                     print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
-
+                    ### Save files
                     file_name = 'ei'+str(self.file_num+2)+'.csv'
                     save_path = os.path.join(self.search_path,'edge_index')
                     createFolder(save_path)
                     place_csv.to_csv(os.path.join(save_path,file_name))
+
+                    ###
+                    self.place_csv = place_csv
+
                     return place_csv
                 
                 else:
@@ -121,6 +169,57 @@ class MakeDataset(Dataset):
                 print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[self.file_num+1])
         else:
             print("----Cannot place this object----")
+
+    def attach(self, obj1, obj2):
+        attach_csv = self.place_csv
+        # print(attach_csv)
+        #### Simply attach object one by one 
+        from_node_path = os.path.join(self.search_path, 'node_features', 'nf0.csv')
+        nf = pd.read_csv(from_node_path, index_col=0)
+        attached_boxes = nf[nf['Type_Attached_Boxes'] == 1].index.to_list()[0]
+        self.attached_boxes = attached_boxes
+
+        split_boxes = [x for x in f'{attached_boxes}']
+        # print(split_boxes[0], type(split_boxes[1]))
+
+
+        if obj1 != 0 and obj1 != 8 and obj2 != 0 and obj2 != 8:
+            if attach_csv.loc[obj1,f'{obj2}'] == 1 and attach_csv.loc[obj2,f'{obj1}'] == 1:
+
+                # Change relation with attached boxes) obj1 and obj2 
+                # attach_csv.loc[obj1,f'{obj2}'] = 0
+                # attach_csv.loc[obj2,f'{obj1}'] = 0
+
+                # Attach Obj1 and Obj2 
+                attach_csv.loc[attached_boxes, f'{split_boxes[0]}'] = 1 
+                attach_csv.loc[int(split_boxes[0]), f'{attached_boxes}'] = 1
+                attach_csv.loc[attached_boxes, f'{split_boxes[1]}'] = 1 
+                attach_csv.loc[int(split_boxes[1]), f'{attached_boxes}'] = 1
+
+
+                # Put on table
+                attach_csv.loc[attached_boxes, '8'] = 1
+                attach_csv.loc[8, f'{attached_boxes}'] = 1
+               
+                print(attach_csv)
+
+
+
+
+                ### Save files
+                file_name = 'ei'+str(self.file_num+3)+'.csv'
+                save_path = os.path.join(self.search_path,'edge_index')
+                createFolder(save_path)
+                attach_csv.to_csv(os.path.join(save_path,file_name))
+
+                return attach_csv
+
+            else:
+                print("----Obj1 is not <on> Obj2----")
+        else:
+            print("----Cannot attach those object----")
+
+        
 
 
     def pour(self, file_num, obj1, obj2):
@@ -160,29 +259,61 @@ class MakeDataset(Dataset):
 
     
         
-    def save_file(self, action,i):
+    # def save_file(self, action,i):
        
-        if action == 'pick':
-            action_pick = 'ef_'+ str(i) + '.csv'
-            self.pick_csv.to_csv(os.path.join(self.search_path, action_pick))
-            print("\n", action_pick,"is saved")
+    #     if action == 'pick':
+    #         action_pick = 'ef_'+ str(i) + '.csv'
+    #         self.pick_csv.to_csv(os.path.join(self.search_path, action_pick))
+    #         print("\n", action_pick,"is saved")
 
-        elif action == 'place':
-            action_place = 'ef_ '+ str(i) + '.csv'
-            self.place_csv.to_csv(os.path.join(self.search_path, action_place))
-            print("\n", action_place,"is saved")
+    #     elif action == 'place':
+    #         action_place = 'ef_ '+ str(i) + '.csv'
+    #         self.place_csv.to_csv(os.path.join(self.search_path, action_place))
+    #         print("\n", action_place,"is saved")
 
-        elif action == 'pour':
-            action_pour = 'ef_ '+ str(i) + '.csv'
-            self.pour_csv.to_csv(os.path.join(self.search_path, action_place))
-            print("\n", action, "is saved")
+    #     elif action == 'pour':
+    #         action_pour = 'ef_ '+ str(i) + '.csv'
+    #         self.pour_csv.to_csv(os.path.join(self.search_path, action_place))
+    #         print("\n", action, "is saved")
 
-        else:
-            print("----Wrong action----")
+    #     else:
+    #         print("----Wrong action----")
+
+    def init_edge_index(self):
+
+        # # Save dataframe
+     
+        # edge_path = os.path.join(self.search_path, 'edge_index', 'ei0.csv')
+        # ef = pd.read_csv(edge_path, index_col=0)
+        from_node_path = os.path.join(self.search_path, 'node_features', 'nf0.csv')
+        nf = pd.read_csv(from_node_path)
+        node_index = nf['ID'].to_list()
+        print(node_index)
+
+        list_0 = [0 for i in range(len(node_index))]
+        list_normal = [0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+        list_table = [0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+
+        edge_index0_csv = pd.DataFrame({'ID': node_index, '0': list_0, '1':list_normal ,'2':list_normal, '3': list_normal, '4': list_normal, \
+                                        '5': list_normal, '6':list_normal, '7':list_normal, '8':list_table, '34':list_0})
+        print(edge_index0_csv)
+
+
+        edge_index0_csv = edge_index0_csv.set_index("ID")
+        save_inx0_path = os.path.join(self.search_path, 'edge_index')
+        createFolder(save_inx0_path)
+        save_csv = os.path.join(save_inx0_path, 'ei0.csv')
+        edge_index0_csv.to_csv(save_csv) 
+        
+        print("\n----ei0.csv file is saved----")
+        # path = '/home/jeni/Desktop/dataloader/seq_dataset/stacking_v2/v2_ex_1_2_34_5/node_features/nf0.csv'
+
+
+
+
 
 
     def init_edge_attr(self, file_num):
-    
         list_attr = []
 
         # Dataframe
@@ -233,7 +364,8 @@ class MakeDataset(Dataset):
     ##########################Call informations################################
     def sample_data(self, i): # i = range(0,8)
         # Node feature path
-        nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features','nf0.csv')
+        # nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features','nf0.csv')  # stacking_5, mixing_5
+        nf_path = os.path.join(self.FILEPATH, self.problem, self.example, 'node_features', 'nf0.csv') # stacking_v2
 
         # Edge index path
         index_path = os.path.join(self.search_path, 'edge_index')
@@ -315,7 +447,6 @@ class MakeDataset(Dataset):
 
     ############################################# Make Edge attributes##########################################
     def make_edge_attr(self,i): 
-        # print(ef.at[0,'2'])
         # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
         edge_feature_path = os.path.join(self.FILEPATH, self.problem, 'edge_features')
         order_file_list = natsort.natsorted(os.listdir(edge_feature_path))
@@ -491,7 +622,7 @@ class MakeDataset(Dataset):
         # pos = nx.spring_layout(g)
         # pos = nx.shell_layout(g)
         
-        #check the position
+        # check the position
 
         # Get a repreducible layout and create figure
         fig, ax = plt.subplots() 
@@ -510,7 +641,7 @@ class MakeDataset(Dataset):
         
         # Show title
         title_font = {'fontsize':14, 'fontweight':'bold'}
-        plt.title("Present state", fontdict=title_font)  
+        plt.title("Present state", fontdict = title_font)  
         
         
 
@@ -544,12 +675,23 @@ class MakeDataset(Dataset):
              
         
         # plt.figure(figsize=(10,8))  
-        plt.show()
+        ### Check the graphs
+        # plt.show() # 
+
+        ### Save the graph files
+        nx.draw(g) # 저장할 때
+        graph_path = os.path.join(self.FILEPATH, self.problem, 'graph_image')
+        createFolder(graph_path)
+        task_name = 'task' + str(fig_num) + '.png'
+        save_graph_path = os.path.join(graph_path, task_name)
+        plt.savefig(save_graph_path)
 
 
     ############################################## With velcro objects ################################################
-    # def velcro_stack(self):
-    #     pass
+    def velcro_stack(self):
+        pass
+
+
 
 
 
@@ -681,136 +823,138 @@ stack_pos8 = {
 stack_pos = [stack_pos0, stack_pos1, stack_pos2, stack_pos3, stack_pos4, stack_pos5, stack_pos6, stack_pos7, stack_pos8]
 
 
-mix_pos0 = {
+mix_pos0 = {     
     0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.5, 0.38],
+    4: [0.40, 0.35],
+    5: [0.33, 0.28],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
 
-mix_pos1 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos1 = {     
+    0: [0.33, 0.4],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.5, 0.38],
+    4: [0.40, 0.35],
+    5: [0.33, 0.28],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
 
-mix_pos2 = {
+mix_pos2 = {     
     0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.5, 0.38],
+    4: [0.40, 0.35],
+    5: [0.21, 0.23],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos3 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+
+mix_pos3 = {     
+    0: [0.4, 0.47],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.5, 0.38],
+    4: [0.4, 0.35],
+    5: [0.18, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos4 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+
+mix_pos4 = {     
+    0: [0.4, 0.47],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.5, 0.38],
+    4: [0.21, 0.25],
+    5: [0.18, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos5 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos5 = {     
+    0: [0.5, 0.5],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.5, 0.38],
+    4: [0.21, 0.25],
+    5: [0.18, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos6 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos6 = {     
+    0: [0.5, 0.5],
+    1: [0.67, 0.28],
+    2: [0.60, 0.35],
+    3: [0.3, 0.3],
+    4: [0.17, 0.27],
+    5: [0.1, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos7 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos7 = {     
+    0: [0.6, 0.47],
+    1: [0.67, 0.28],
+    2: [0.6, 0.35],
+    3: [0.3, 0.3],
+    4: [0.17, 0.27],
+    5: [0.1, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos8 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos8 = {     
+    0: [0.55, 0.28],
+    1: [0.67, 0.28],
+    2: [0.43, 0.27],
+    3: [0.3, 0.3],
+    4: [0.17, 0.27],
+    5: [0.1, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos9 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos9 = {     
+    0: [0.67, 0.4],
+    1: [0.67, 0.28],
+    2: [0.43, 0.27],
+    3: [0.3, 0.3],
+    4: [0.17, 0.27],
+    5: [0.1, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos10 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos10 = {   
+    0: [0.67, 0.4],
+    1: [0.5, 0.22],
+    2: [0.43, 0.27],
+    3: [0.3, 0.3],
+    4: [0.17, 0.27],
+    5: [0.1, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
 }
-mix_pos11 = {
-    0: [0.33, 0.35],
-    1: [0.33, 0.28],
-    2: [0.40, 0.35],
-    3: [0.67, 0.28],
-    4: [0.60, 0.35],
-    5: [0.5, 0.38],
+mix_pos11 = {   
+    0: [1.07, 0.4],
+    1: [0.9, 0.22],
+    2: [0.83, 0.27],
+    3: [0.7, 0.3],
+    4: [0.57, 0.27],
+    5: [0.5, 0.22],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
     8: [0.5, 0.1]
