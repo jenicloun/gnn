@@ -81,13 +81,13 @@ class MakeDataset(Dataset):
         # print(node_features)
 
 
-    def pick(self, file_num, obj1): # obj = ID number
+    def pick(self, save_file_num, obj1): # obj = ID number
         # Choose sample
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
 
         # edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
-        edge_path = os.path.join(self.search_path, 'edge_index',file_list[file_num])
+        edge_path = os.path.join(self.search_path, 'edge_index',file_list[save_file_num])
         ef_csv = pd.read_csv(edge_path, index_col=0)
 
       
@@ -112,30 +112,36 @@ class MakeDataset(Dataset):
                 print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
         
-                file_name = 'ei'+str(file_num+1)+'.csv'
+                file_name = 'ei'+str(save_file_num+1)+'.csv'
                 save_path = os.path.join(self.search_path,'edge_index')
                 createFolder(save_path)
                 pick_csv.to_csv(os.path.join(save_path,file_name))
                    
 
-                self.file_num = file_num
+                self.save_file_num = save_file_num
                 self.pick_csv = pick_csv
             
                 return pick_csv
             
             else:
-                print("\n----Check the '.csv' file again----\nFile lists:", file_list[file_num])
+                print("\n----Check the '.csv' file again----\nFile lists:", file_list[save_file_num])
             
         else:
             print("\n----Cannot pick this object----\n")
 
 
         
-    def place(self, obj1, obj2): 
-        place_csv = self.pick_csv
+    def place(self, load_file_num,save_file_num, obj1, obj2): 
+        sample_inx_path = os.path.join(self.search_path,'edge_index')
+        file_list = natsort.natsorted(os.listdir(sample_inx_path))
+
+        # edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
+        edge_path = os.path.join(self.search_path, 'edge_index',file_list[load_file_num])
+        place_csv = pd.read_csv(edge_path, index_col=0)
+        # place_csv = self.pick_csv
         
         # Check obj1 and obj2 range
-        if obj1 != 0 and obj1 != 8 and obj2 != 0 and obj2 != 8:
+        if obj1 != 0 and obj1 != 8 and obj2 != 0:
             # 'in-grasp' relation (Robot hand O -> X) , object are not equal
             if place_csv.loc[obj1,'0'] == 1 and place_csv.loc[0,f'{obj1}'] == 1:
                 # Check obj1 and obj2 are equal
@@ -153,7 +159,7 @@ class MakeDataset(Dataset):
                     print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
                     ### Save files
-                    file_name = 'ei'+str(self.file_num+2)+'.csv'
+                    file_name = 'ei'+str(save_file_num)+'.csv'
                     save_path = os.path.join(self.search_path,'edge_index')
                     createFolder(save_path)
                     place_csv.to_csv(os.path.join(save_path,file_name))
@@ -166,7 +172,7 @@ class MakeDataset(Dataset):
                 else:
                     print("----Object1 and object2 are equal----")
             else:
-                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[self.file_num+1])
+                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[self.save_file_num+1])
         else:
             print("----Cannot place this object----")
 
@@ -512,6 +518,8 @@ class MakeDataset(Dataset):
 
         # Connect edge
         ea_inx = self.edge_attr.index.to_list()
+
+        print("ea_inx", ea_inx)
         
         for tar in ea_inx:
             ret = [int(k) for k in re.split('[^0-9]', tar) if k]
@@ -535,7 +543,7 @@ class MakeDataset(Dataset):
      
         
         #  Relation 보기 간편하게 바꿔줌 string -> tuple
-        for i in range(len(ea_inx)):
+        for i in range(len(list_node_pair)):
             for j in range(len(ea_col)):
                 if self.edge_attr.at[ea_inx[i], ea_col[j]] == 1:
                     if ea_col[j] == 'rel_on_right':
@@ -949,7 +957,29 @@ mix_pos10 = {
     8: [0.5, 0.1]
 }
 mix_pos11 = {   
-    0: [1.07, 0.4],
+    0: [0.4, 0.31],
+    1: [0.5, 0.22],
+    2: [0.43, 0.27],
+    3: [0.3, 0.3],
+    4: [0.17, 0.27],
+    5: [0.1, 0.22],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+mix_pos12 =  {   
+    0: [0.4, 0.3],
+    1: [0.9, 0.22],
+    2: [0.83, 0.27],
+    3: [0.7, 0.3],
+    4: [0.57, 0.27],
+    5: [0.5, 0.22],
+    6: [0.3, 0.2],
+    7: [0.7, 0.2],
+    8: [0.5, 0.1]
+}
+mix_pos13 =  {   
+    0: [0.4, 0.3],
     1: [0.9, 0.22],
     2: [0.83, 0.27],
     3: [0.7, 0.3],
@@ -961,11 +991,7 @@ mix_pos11 = {
 }
 
 
-
-
-
-
-mix_pos = [mix_pos0, mix_pos1,mix_pos2,mix_pos3,mix_pos4,mix_pos5,mix_pos6,mix_pos7,mix_pos8,mix_pos9,mix_pos10,mix_pos11]
+mix_pos = [mix_pos0, mix_pos1,mix_pos2,mix_pos3,mix_pos4,mix_pos5,mix_pos6,mix_pos7,mix_pos8,mix_pos9,mix_pos10,mix_pos11, mix_pos12, mix_pos13]
 
 
 
