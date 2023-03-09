@@ -23,16 +23,31 @@ if __name__ == '__main__':
     # print(make_data.pick(file_num = 0, obj1 = 4))
     # print(make_data.place(file_num = 0, obj1 = 4, obj2= 6))
     # print(make_data.pick(file_num = 0, obj1 = 3))
-    # print(make_data.place(file_num = 4, obj1 = 3, obj2= 6))
-   
+    # print(make_data.place(file_num = 4, obj1 = 3, obj2= 6))   
     # print(make_data.pick(file_num = 0, obj1 = 5))
     # print(make_data.place(file_num = 0, obj1 = 5, obj2= 6))
     # print(make_data.pick(file_num = 1, obj1 = 6))
     # print(make_data.pour(file_num = 0, obj1 = 6 , obj2 = 7))
 
+    # # Velcro 2
+    make_data = MakeDataset(problem = 'stacking_v2', example= 'v2_ex_1_2_34_5')
+    # make_data = MakeDataset(problem = 'stacking_v2', example= 'v2_ex_1_23_4_5')
 
-    # make_data = MakeDataset(problem= 'stacking_v2', example= 'v2_ex_1_2_34_5')
-    make_data = MakeDataset(problem = 'mixing_5', example = 'mix_ex_1_2_3_4_5')
+    # # Velcro 3
+    # make_data = MakeDataset(problem = 'stacking_v3', example= 'v3_ex_123_4_5')
+    # make_data = MakeDataset(problem = 'stacking_v3', example= 'v3_ex_1_234_5') 
+    # make_data = MakeDataset(problem = 'stacking_v3', example= 'v3_ex_1_2_345') 
+
+    # # Velcro 4
+    # make_data = MakeDataset(problem = 'stacking_v4', example= 'v4_ex_1234_5')
+    # make_data = MakeDataset(problem = 'stacking_v4', example= 'v4_ex_1_2345')
+
+    # Mixing 2
+    # make_data = MakeDataset(problem = 'mixing_v2', example= 'v2_ex_')
+
+
+    # Original
+    # make_data = MakeDataset(problem = 'mixing_5', example = 'mix_ex_1_2_3_4_5')
     # make_data = MakeDataset(problem = 'stacking_5', example = 'ex_1_2_3_4_5')
 
     # print(make_data.init_edge_attr(file_num= 13))
@@ -41,32 +56,32 @@ if __name__ == '__main__':
 
 
 
-    # make_data.create_node_features()
+    # make_data.changed_node_feature()
     
-    for a in range(0, 14): # stacking (0,9) 0~8, mixing (0,14) 0~13
-    #     ################### Call sample data ####################
-    #         # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
-        print(f"\n[[[[[Task{a}]]]]]")
-        print(make_data.sample_data(i=a))
+    # for a in range(0, 1): # stacking (0,9) 0~8, mixing (0,14) 0~13
+    # #     ################### Call sample data ####################
+    # #         # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
+    #     print(f"\n[[[[[Task{a}]]]]]")
+    #     print(make_data.sample_data(i=a))
     #     #[Warning]#### 0으로 시작 # print(make_data.init_edge_attr(file_num = a))
 
 
     #     ### Checking graphs
         # make_data.make_graph(fig_num=a, pos = mix_pos[a])
         # make_data.make_edge_index(i=a) 
-        make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
+        # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
     #     action_v2_stacking = ['pick','place','pick','place','pick','place','pick','place']
-    # ############################## [Velcro2] ##############################
-    # print(make_data.pick(file_num= 0, obj1= 3))
-    # print(make_data.place(obj1=3, obj2=4))
-    # print(make_data.attach(obj1=3, obj2=4))
+    # ############################## [Stacking_v2] ##############################
+    print(make_data.pick(save_file_num= 1, obj1= 3))
+    print(make_data.place(load_file_num= 1 ,save_file_num=2, obj1=3, obj2=4))
+    print(make_data.attach(save_file_num = 3,obj1 = 3, obj2 = 4))
 
     # print(make_data.pick(file_num=2, obj1= ))
 
 
 
 
-    ############################## [Mixing] ##############################
+    ############################## [Mixing_5] ##############################
         # # Object 5
         # print(make_data.pick(file_num = 0, obj1 = 5))
         # print(make_data.place(obj1 = 5, obj2=6))

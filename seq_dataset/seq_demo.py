@@ -19,7 +19,7 @@ class MakeDataset(Dataset):
     def __init__(self, problem, example):
         # Search path
         FILEPATH, _ = os.path.split(os.path.realpath(__file__))
-        search_path = os.path.join(FILEPATH, problem, example)
+        search_path = os.path.join(FILEPATH, 'tasks', problem, example)
     
 
         self.FILEPATH = FILEPATH
@@ -112,7 +112,7 @@ class MakeDataset(Dataset):
                 print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
         
-                file_name = 'ei'+str(save_file_num+1)+'.csv'
+                file_name = 'ei'+str(save_file_num)+'.csv'
                 save_path = os.path.join(self.search_path,'edge_index')
                 createFolder(save_path)
                 pick_csv.to_csv(os.path.join(save_path,file_name))
@@ -121,7 +121,7 @@ class MakeDataset(Dataset):
                 self.save_file_num = save_file_num
                 self.pick_csv = pick_csv
             
-                return pick_csv
+                return self.pick_csv
             
             else:
                 print("\n----Check the '.csv' file again----\nFile lists:", file_list[save_file_num])
@@ -167,53 +167,70 @@ class MakeDataset(Dataset):
                     ###
                     self.place_csv = place_csv
 
-                    return place_csv
+                    return self.place_csv
                 
                 else:
                     print("----Object1 and object2 are equal----")
             else:
-                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:", self.file_list[self.save_file_num+1])
+                print("\n----Robot hand does not hold obj1. Please check the '.csv' file again----\nFile lists:") #, self.file_list[self.save_file_num+1])
         else:
             print("----Cannot place this object----")
 
-    def attach(self, obj1, obj2):
+    def attach(self, save_file_num, obj1, obj2):
         attach_csv = self.place_csv
         # print(attach_csv)
         #### Simply attach object one by one 
-        from_node_path = os.path.join(self.search_path, 'node_features', 'nf0.csv')
+        from_node_path = os.path.join(self.search_path, 'node_features', 'nf1.csv')
         nf = pd.read_csv(from_node_path, index_col=0)
+        # print(nf)
         attached_boxes = nf[nf['Type_Attached_Boxes'] == 1].index.to_list()[0]
-        self.attached_boxes = attached_boxes
+        # print(attached_boxes)
+        # self.attached_boxes = attached_boxes
 
         split_boxes = [x for x in f'{attached_boxes}']
+        # print(split_boxes)
         # print(split_boxes[0], type(split_boxes[1]))
 
+        for sb in split_boxes:
+            attach_csv = attach_csv.drop(index= int(sb))
+            attach_csv = attach_csv.drop(columns= sb)
+       
+        # print(attached_boxes)
+        
+        # attach box에 대한 행과 열 추가
+        attach_csv.loc[attached_boxes] = 0
+        attach_csv[f'{attached_boxes}'] = 0
+       
+        # 8번 Table 위에 올려두기
+        attach_csv.loc[attached_boxes, '8'] = 1
+        attach_csv.loc[8, f'{attached_boxes}'] = 1
+            
 
         if obj1 != 0 and obj1 != 8 and obj2 != 0 and obj2 != 8:
-            if attach_csv.loc[obj1,f'{obj2}'] == 1 and attach_csv.loc[obj2,f'{obj1}'] == 1:
+            if self.place_csv.loc[obj1,f'{obj2}'] == 1 and self.place_csv.loc[obj2,f'{obj1}'] == 1:
 
-                # Change relation with attached boxes) obj1 and obj2 
-                # attach_csv.loc[obj1,f'{obj2}'] = 0
-                # attach_csv.loc[obj2,f'{obj1}'] = 0
+        #         # Change relation with attached boxes) obj1 and obj2 
+        #         # attach_csv.loc[obj1,f'{obj2}'] = 0
+        #         # attach_csv.loc[obj2,f'{obj1}'] = 0
 
-                # Attach Obj1 and Obj2 
-                attach_csv.loc[attached_boxes, f'{split_boxes[0]}'] = 1 
-                attach_csv.loc[int(split_boxes[0]), f'{attached_boxes}'] = 1
-                attach_csv.loc[attached_boxes, f'{split_boxes[1]}'] = 1 
-                attach_csv.loc[int(split_boxes[1]), f'{attached_boxes}'] = 1
+        #         # Attach Obj1 and Obj2 
+        #         attach_csv.loc[attached_boxes, f'{split_boxes[0]}'] = 1 
+        #         attach_csv.loc[int(split_boxes[0]), f'{attached_boxes}'] = 1
+        #         attach_csv.loc[attached_boxes, f'{split_boxes[1]}'] = 1 
+        #         attach_csv.loc[int(split_boxes[1]), f'{attached_boxes}'] = 1
 
 
-                # Put on table
-                attach_csv.loc[attached_boxes, '8'] = 1
-                attach_csv.loc[8, f'{attached_boxes}'] = 1
+        #         # Put on table
+        #         attach_csv.loc[attached_boxes, '8'] = 1
+        #         attach_csv.loc[8, f'{attached_boxes}'] = 1
                
-                print(attach_csv)
+        #         print(attach_csv)
 
 
 
 
-                ### Save files
-                file_name = 'ei'+str(self.file_num+3)+'.csv'
+            ### Save files
+                file_name = 'ei'+str(save_file_num)+'.csv'
                 save_path = os.path.join(self.search_path,'edge_index')
                 createFolder(save_path)
                 attach_csv.to_csv(os.path.join(save_path,file_name))
@@ -285,6 +302,40 @@ class MakeDataset(Dataset):
     #     else:
     #         print("----Wrong action----")
 
+    def changed_node_feature(self):
+        from_node_path = os.path.join(self.search_path, 'node_features', 'nf0.csv')
+        nf0 = pd.read_csv(from_node_path)
+        print(nf0)
+        attach_index = nf0[nf0['Property_V'] == 1].index.to_list() #[int, int]
+        print(attach_index)
+        # for i in range(len(attach_index)):
+            # attach_box = str(attach_index[i-1]) + str(attach_index[i])
+        # print(attach_box)
+        for ab in attach_index:
+            attach_boxes = str(attach_index[0]) + str(attach_index[1])
+            # attach_boxes = attach_boxes + ab
+            
+            nf0 = nf0.drop(index=ab)
+            nf1 = nf0.set_index("ID")
+            nf1.loc[attach_boxes] = [0 for i in range(len(nf1.columns))]
+        
+            list_0 = [0 for n in range(len(nf1.index)-1)] + [1]
+            nf1.loc[:,'Type_Attached_Boxes'] = list_0
+
+        print(nf1)
+        save_nf1_path = os.path.join(self.search_path, 'node_features')
+        createFolder(save_nf1_path)
+        save_csv = os.path.join(save_nf1_path, 'nf1.csv')
+        nf1.to_csv(save_csv) 
+        
+        print("\n----nf1.csv file is saved----")
+
+    # def edge_index(self):
+
+
+
+
+
     def init_edge_index(self):
 
         # # Save dataframe
@@ -301,7 +352,7 @@ class MakeDataset(Dataset):
         list_table = [0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
 
         edge_index0_csv = pd.DataFrame({'ID': node_index, '0': list_0, '1':list_normal ,'2':list_normal, '3': list_normal, '4': list_normal, \
-                                        '5': list_normal, '6':list_normal, '7':list_normal, '8':list_table, '34':list_0})
+                                        '5': list_normal, '6':list_normal, '7':list_normal, '8':list_table})
         print(edge_index0_csv)
 
 
@@ -371,7 +422,7 @@ class MakeDataset(Dataset):
     def sample_data(self, i): # i = range(0,8)
         # Node feature path
         # nf_path = os.path.join(self.FILEPATH, self.problem , 'node_features','nf0.csv')  # stacking_5, mixing_5
-        nf_path = os.path.join(self.FILEPATH, self.problem, self.example, 'node_features', 'nf0.csv') # stacking_v2
+        nf_path = os.path.join(self.FILEPATH,'tasks', self.problem, self.example, 'node_features', 'nf0.csv') # stacking_v2
 
         # Edge index path
         index_path = os.path.join(self.search_path, 'edge_index')
