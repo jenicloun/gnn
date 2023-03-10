@@ -30,13 +30,13 @@ if __name__ == '__main__':
     # print(make_data.pour(file_num = 0, obj1 = 6 , obj2 = 7))
 
     # # Velcro 2
-    make_data = MakeDataset(problem = 'stacking_v2', example= 'v2_ex_1_2_34_5')
-    # make_data = MakeDataset(problem = 'stacking_v2', example= 'v2_ex_1_23_4_5')
+    # make_data = MakeDataset(problem = 'stacking_v2', example= '1_2_3_45')
+    # make_data = MakeDataset(problem = 'stacking_v2', example= 'ex_v2_1_23_4_5')
 
     # # Velcro 3
-    # make_data = MakeDataset(problem = 'stacking_v3', example= 'v3_ex_123_4_5')
-    # make_data = MakeDataset(problem = 'stacking_v3', example= 'v3_ex_1_234_5') 
-    # make_data = MakeDataset(problem = 'stacking_v3', example= 'v3_ex_1_2_345') 
+    # make_data = MakeDataset(problem = 'stacking_v3', example= 'ex_v3_123_4_5')
+    # make_data = MakeDataset(problem = 'stacking_v3', example= 'ex_v3_1_234_5') 
+    # make_data = MakeDataset(problem = 'stacking_v3', example= 'ex_v3_1_2_345') 
 
     # # Velcro 4
     # make_data = MakeDataset(problem = 'stacking_v4', example= 'v4_ex_1234_5')
@@ -58,25 +58,105 @@ if __name__ == '__main__':
 
     # make_data.changed_node_feature()
     
-    # for a in range(0, 1): # stacking (0,9) 0~8, mixing (0,14) 0~13
-    # #     ################### Call sample data ####################
-    # #         # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
+    # for a in range(0,1): # stacking (0,9) 0~8, mixing (0,14) 0~13
+    # # #     ################### Call sample data ####################
+    # # #         # action_seq = ['pick','place','pick','place','pick','place','pick','place','pick','place']
     #     print(f"\n[[[[[Task{a}]]]]]")
-    #     print(make_data.sample_data(i=a))
+    #     # print(make_data.sample_data(i=a))
     #     #[Warning]#### 0으로 시작 # print(make_data.init_edge_attr(file_num = a))
 
 
     #     ### Checking graphs
         # make_data.make_graph(fig_num=a, pos = mix_pos[a])
+        # make_data.make_graph(fig_num=a, pos = stack_pos[a])
         # make_data.make_edge_index(i=a) 
         # make_data.make_edge_attr(i=a) # def make_edge_index실행 후에 돌려
     #     action_v2_stacking = ['pick','place','pick','place','pick','place','pick','place']
     # ############################## [Stacking_v2] ##############################
-    print(make_data.pick(save_file_num= 1, obj1= 3))
-    print(make_data.place(load_file_num= 1 ,save_file_num=2, obj1=3, obj2=4))
-    print(make_data.attach(save_file_num = 3,obj1 = 3, obj2 = 4))
+    ## 1_2_34_5 # Attach - file 3
+    # make_data = MakeDataset(problem = 'stacking_v2', example= '1_2_34_5')
+    # print(make_data.init_node_features())
+    # print(make_data.changed_node_feature())
+    # print(make_data.init_edge_index())
+    # print(make_data.pick(load_file_num= 0, obj1= 3))
+    # print(make_data.place(load_file_num= 1, obj1=3, obj2=4))
+    # print(make_data.attach(load_file_num = 2,obj1 = 3, obj2 = 4))
+    # print(make_data.pick(load_file_num= 3, obj1= 34))
+    # print(make_data.place(load_file_num= 4, obj1=34, obj2=5))
+    # print(make_data.pick(load_file_num= 5, obj1= 2))
+    # print(make_data.place(load_file_num= 6, obj1= 2, obj2= 34))
+    # print(make_data.pick(load_file_num= 7, obj1= 1))
+    # print(make_data.place(load_file_num= 8, obj1= 1, obj2= 2))
+    
+    # # ## 1_2_3_45 # Attach - file 3
+    # make_data = MakeDataset(problem = 'stacking_v2', example= '1_2_3_45')
+    # print(make_data.init_node_features())
+    # print(make_data.changed_node_feature())
+    # print(make_data.init_edge_index())
+    # print(make_data.pick(load_file_num= 0, obj1= 4))
+    # print(make_data.place(load_file_num= 1, obj1=4, obj2=5))
+    # print(make_data.attach(load_file_num = 2,obj1 = 4, obj2 = 5))
+    # print(make_data.pick(load_file_num= 3, obj1= 3))
+    # print(make_data.place(load_file_num= 4, obj1=3, obj2=45))
+    # print(make_data.pick(load_file_num= 5, obj1= 2))
+    # print(make_data.place(load_file_num= 6, obj1= 2, obj2= 3))
+    # print(make_data.pick(load_file_num= 7, obj1= 1))
+    # print(make_data.place(load_file_num= 8, obj1= 1, obj2= 2))
 
-    # print(make_data.pick(file_num=2, obj1= ))
+
+    # ## 1_23_4_5 # Attach - file 5
+    # make_data = MakeDataset(problem = 'stacking_v2', example= '1_23_4_5')
+    # print(make_data.init_node_features())
+    # print(make_data.changed_node_feature())
+    # print(make_data.init_edge_index())
+    # print(make_data.pick(load_file_num= 0, obj1= 4))
+    # print(make_data.place(load_file_num= 1, obj1= 4, obj2= 5))
+    # print(make_data.pick(load_file_num= 2, obj1= 2))
+    # print(make_data.place(load_file_num= 3, obj1= 2, obj2= 3))
+    # print(make_data.attach(load_file_num = 4,obj1 = 2, obj2 = 3))
+    # print(make_data.pick(load_file_num= 5, obj1= 23))
+    # print(make_data.place(load_file_num= 6, obj1= 23, obj2= 4))
+    # print(make_data.pick(load_file_num= 7, obj1= 1))
+    # print(make_data.place(load_file_num= 8, obj1= 1, obj2= 23))
+
+    ## 12_3_4_5 # Attach - file 7
+    # make_data = MakeDataset(problem = 'stacking_v2', example= '12_3_4_5')
+    # print(make_data.init_node_features())
+    # print(make_data.changed_node_feature())
+    # print(make_data.init_edge_index())
+    # print(make_data.pick(load_file_num= 0, obj1= 4))
+    # print(make_data.place(load_file_num= 1, obj1= 4, obj2= 5))
+    # print(make_data.pick(load_file_num= 2, obj1= 3))
+    # print(make_data.place(load_file_num= 3, obj1= 3, obj2= 4))
+    # print(make_data.pick(load_file_num= 4, obj1= 1))
+    # print(make_data.place(load_file_num= 5, obj1= 1, obj2= 2))
+    # print(make_data.attach(load_file_num = 6,obj1 = 1, obj2 = 2))
+    # print(make_data.pick(load_file_num= 7, obj1= 12))
+    # print(make_data.place(load_file_num= 8, obj1= 12, obj2= 3))
+
+
+    ## 1_2_345 # Attach - file
+    make_data = MakeDataset(problem='stacking_v3', example= '1_2_345')
+    print(make_data.init_node_features())
+    print(make_data.changed_node_feature(file_num = 1))
+    print(make_data.changed_node_feature(file_num = 2))
+    # print(make_data.init_edge_index())
+
+    # print(make_data.pick(load_file_num=0, obj1= 4))
+    # print(make_data.place(load_file_num=1, obj1=4, obj2= 5))
+    # print(make_data.attach(load_file_num=2, obj1=4, obj2= 5))
+    # print(make_data.pick(load_file_num=3, obj1=3, obj2= 45))
+    # print(make_data.place(load_file_num=4, obj1=3, obj2= 45))
+    # print(make_data.attach(load_file_num=5, obj1=3, obj2= 45))
+    # print(make_data.pick(load_file_num=6, obj1=2))
+    # print(make_data.place(load_file_num=7, obj1=2, obj2=345))
+    # print(make_data.pick(load_file_num=8, obj1=1, obj2=2))
+
+
+
+
+
+
 
 
 

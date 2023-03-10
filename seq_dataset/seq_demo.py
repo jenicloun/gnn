@@ -36,10 +36,42 @@ class MakeDataset(Dataset):
         print("\n==========================================INIT======================================================")
     
 
-    def create_node_features(self):
-        pass
+    def init_node_features(self):
+        save_path = os.path.join(self.search_path,'node_features')
+        createFolder(save_path)
+        ID_col = list(range(9))
+        Type_bowl_col = [0,0,0,0,0,0,1,1,0]
+        Type_box_col =  [0,1,1,1,1,1,0,0,0]
+        Type_robot_col =[1,0,0,0,0,0,0,0,0]
+        Property_g_col =[0,1,1,1,1,1,1,1,0]
+
+        Property_v_col = [0 for i in range(len(ID_col))]
+
+        # Velcro  # 예를 들어 self.example - 1_2_3_45일 경우 _로 split해서 1개로 나누어있지 않은 경우에 Property_Velcro를 만든다.
+        for node in self.example.split('_'):
+            if len(node) != 1:
+                for attached_box in node:
+                    Property_v_col[int(attached_box)] = 1  
+
+        print(Property_v_col)  
+
+                    
 
 
+        # Property_v_col =[0,0,0,0,1,1,0,0,0]
+      
+
+        node_feature0_csv = pd.DataFrame({'ID': ID_col,'Type_Bowl': Type_bowl_col, 'Type_Box': Type_box_col, 'Type_Robot': Type_robot_col, \
+                                          'Property_V': Property_v_col, 'Property_G': Property_g_col})
+
+        node_feature0_csv = node_feature0_csv.set_index("ID")
+        print(node_feature0_csv)
+
+
+        file_name = str(self.example)+'_nf0.csv'
+        save_path = os.path.join(self.search_path,'node_features')
+        createFolder(save_path)
+        node_feature0_csv.to_csv(os.path.join(save_path,file_name))
 
 
         # Ground = pd.read_csv("/home/jeni/Desktop/gcn/box_test1.csv")
@@ -81,13 +113,13 @@ class MakeDataset(Dataset):
         # print(node_features)
 
 
-    def pick(self, save_file_num, obj1): # obj = ID number
+    def pick(self, load_file_num, obj1): # obj = ID number
         # Choose sample
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
 
         # edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
-        edge_path = os.path.join(self.search_path, 'edge_index',file_list[save_file_num])
+        edge_path = os.path.join(self.search_path, 'edge_index',file_list[load_file_num])
         ef_csv = pd.read_csv(edge_path, index_col=0)
 
       
@@ -112,26 +144,26 @@ class MakeDataset(Dataset):
                 print(f'\n[ef_pick{str(obj1)}.csv] \n') 
 
         
-                file_name = 'ei'+str(save_file_num)+'.csv'
+                file_name = str(self.example)+'_ei'+str(load_file_num+1)+'.csv'
                 save_path = os.path.join(self.search_path,'edge_index')
                 createFolder(save_path)
                 pick_csv.to_csv(os.path.join(save_path,file_name))
                    
 
-                self.save_file_num = save_file_num
+                # self.save_file_num = save_file_num
                 self.pick_csv = pick_csv
             
                 return self.pick_csv
             
             else:
-                print("\n----Check the '.csv' file again----\nFile lists:", file_list[save_file_num])
+                print("\n----Check the '.csv' file again----\nFile lists:", file_list[load_file_num])
             
         else:
             print("\n----Cannot pick this object----\n")
 
 
         
-    def place(self, load_file_num,save_file_num, obj1, obj2): 
+    def place(self, load_file_num, obj1, obj2): 
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
 
@@ -159,7 +191,7 @@ class MakeDataset(Dataset):
                     print(f'\n[ef_place_{str(obj1)}_on_{str(obj2)}.csv] \n') 
 
                     ### Save files
-                    file_name = 'ei'+str(save_file_num)+'.csv'
+                    file_name = str(self.example)+'_ei'+str(load_file_num+1)+'.csv'
                     save_path = os.path.join(self.search_path,'edge_index')
                     createFolder(save_path)
                     place_csv.to_csv(os.path.join(save_path,file_name))
@@ -176,11 +208,14 @@ class MakeDataset(Dataset):
         else:
             print("----Cannot place this object----")
 
-    def attach(self, save_file_num, obj1, obj2):
+    def attach(self, load_file_num, obj1, obj2):
         attach_csv = self.place_csv
         # print(attach_csv)
         #### Simply attach object one by one 
-        from_node_path = os.path.join(self.search_path, 'node_features', 'nf1.csv')
+        sample_node_path = os.path.join(self.search_path, 'node_features')
+        file_list = natsort.natsorted(os.listdir(sample_node_path))
+
+        from_node_path = os.path.join(self.search_path, 'node_features', file_list[1])
         nf = pd.read_csv(from_node_path, index_col=0)
         # print(nf)
         attached_boxes = nf[nf['Type_Attached_Boxes'] == 1].index.to_list()[0]
@@ -194,7 +229,6 @@ class MakeDataset(Dataset):
         for sb in split_boxes:
             attach_csv = attach_csv.drop(index= int(sb))
             attach_csv = attach_csv.drop(columns= sb)
-       
         # print(attached_boxes)
         
         # attach box에 대한 행과 열 추가
@@ -226,11 +260,8 @@ class MakeDataset(Dataset):
                
         #         print(attach_csv)
 
-
-
-
             ### Save files
-                file_name = 'ei'+str(save_file_num)+'.csv'
+                file_name = str(self.example)+'_ei'+str(load_file_num +1)+'.csv'
                 save_path = os.path.join(self.search_path,'edge_index')
                 createFolder(save_path)
                 attach_csv.to_csv(os.path.join(save_path,file_name))
@@ -242,8 +273,11 @@ class MakeDataset(Dataset):
         else:
             print("----Cannot attach those object----")
 
-        
+    def init_mixing_velcro(self):
+        pass
 
+
+        
 
     def pour(self, file_num, obj1, obj2):
         file = 'ei'+str(file_num)+'.csv'
@@ -272,7 +306,7 @@ class MakeDataset(Dataset):
             print("\n[Change]\n",pour_csv)
                
             
-            file_name = 'ei'+str(file_num+1)+'.csv'
+            file_name = str(self.example)+'_ei'+str(file_num+1)+'.csv'
             save_path = os.path.join(self.search_path,'edge_index')
             createFolder(save_path)
             pour_csv.to_csv(os.path.join(save_path,file_name))
@@ -302,18 +336,19 @@ class MakeDataset(Dataset):
     #     else:
     #         print("----Wrong action----")
 
-    def changed_node_feature(self):
-        from_node_path = os.path.join(self.search_path, 'node_features', 'nf0.csv')
+    def changed_node_feature(self, file_num):
+        sample_node_path = os.path.join(self.search_path, 'node_features')
+        file_list = natsort.natsorted(os.listdir(sample_node_path))
+
+        from_node_path = os.path.join(self.search_path, 'node_features', file_list[0])
+    
         nf0 = pd.read_csv(from_node_path)
         print(nf0)
         attach_index = nf0[nf0['Property_V'] == 1].index.to_list() #[int, int]
         print(attach_index)
-        # for i in range(len(attach_index)):
-            # attach_box = str(attach_index[i-1]) + str(attach_index[i])
-        # print(attach_box)
+        
         for ab in attach_index:
             attach_boxes = str(attach_index[0]) + str(attach_index[1])
-            # attach_boxes = attach_boxes + ab
             
             nf0 = nf0.drop(index=ab)
             nf1 = nf0.set_index("ID")
@@ -325,32 +360,29 @@ class MakeDataset(Dataset):
         print(nf1)
         save_nf1_path = os.path.join(self.search_path, 'node_features')
         createFolder(save_nf1_path)
-        save_csv = os.path.join(save_nf1_path, 'nf1.csv')
+        save_csv = os.path.join(save_nf1_path, str(self.example) + f'_nf{file_num}.csv')
         nf1.to_csv(save_csv) 
-        
         print("\n----nf1.csv file is saved----")
 
-    # def edge_index(self):
 
 
 
-
-
+    
     def init_edge_index(self):
+        # # Save dataframe    
+        sample_node_path = os.path.join(self.search_path, 'node_features')
+        file_list = natsort.natsorted(os.listdir(sample_node_path))
 
-        # # Save dataframe
-     
-        # edge_path = os.path.join(self.search_path, 'edge_index', 'ei0.csv')
-        # ef = pd.read_csv(edge_path, index_col=0)
-        from_node_path = os.path.join(self.search_path, 'node_features', 'nf0.csv')
+        from_node_path = os.path.join(self.search_path, 'node_features', file_list[0])
         nf = pd.read_csv(from_node_path)
         node_index = nf['ID'].to_list()
         print(node_index)
 
         list_0 = [0 for i in range(len(node_index))]
-        list_normal = [0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
-        list_table = [0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+        list_normal = [0, 0, 0, 0, 0, 0, 0, 0, 1]
+        list_table = [0, 1, 1, 1, 1, 1, 1, 1, 0]
 
+        print(len(list_0), len(list_normal), len(list_table))
         edge_index0_csv = pd.DataFrame({'ID': node_index, '0': list_0, '1':list_normal ,'2':list_normal, '3': list_normal, '4': list_normal, \
                                         '5': list_normal, '6':list_normal, '7':list_normal, '8':list_table})
         print(edge_index0_csv)
@@ -359,12 +391,10 @@ class MakeDataset(Dataset):
         edge_index0_csv = edge_index0_csv.set_index("ID")
         save_inx0_path = os.path.join(self.search_path, 'edge_index')
         createFolder(save_inx0_path)
-        save_csv = os.path.join(save_inx0_path, 'ei0.csv')
+        save_csv = os.path.join(save_inx0_path, str(self.example)+'_ei0.csv')
         edge_index0_csv.to_csv(save_csv) 
         
         print("\n----ei0.csv file is saved----")
-        # path = '/home/jeni/Desktop/dataloader/seq_dataset/stacking_v2/v2_ex_1_2_34_5/node_features/nf0.csv'
-
 
 
 
@@ -661,6 +691,9 @@ class MakeDataset(Dataset):
         g.add_node(6, images = images["Bowl6"])
         g.add_node(7, images = images["Bowl7"])
         g.add_node(8, images = images["Table"])
+        g.add_node(34, images = images["Table"])
+        
+
         
         
        
@@ -723,6 +756,7 @@ class MakeDataset(Dataset):
         
                 
         for n in g.nodes:
+            print(["tr_fig", pos])
             xf, yf = tr_figure(pos[n])
             xa, ya = tr_axes((xf, yf))
 
@@ -735,15 +769,15 @@ class MakeDataset(Dataset):
         
         # plt.figure(figsize=(10,8))  
         ### Check the graphs
-        # plt.show() # 
+        plt.show() # 
 
         ### Save the graph files
-        nx.draw(g) # 저장할 때
-        graph_path = os.path.join(self.FILEPATH, self.problem, 'graph_image')
-        createFolder(graph_path)
-        task_name = 'task' + str(fig_num) + '.png'
-        save_graph_path = os.path.join(graph_path, task_name)
-        plt.savefig(save_graph_path)
+        # nx.draw(g) # 저장할 때
+        # graph_path = os.path.join(self.FILEPATH, self.problem, 'graph_image')
+        # createFolder(graph_path)
+        # task_name = 'task' + str(fig_num) + '.png'
+        # save_graph_path = os.path.join(graph_path, task_name)
+        # plt.savefig(save_graph_path)
 
 
     ############################################## With velcro objects ################################################
@@ -812,7 +846,8 @@ stack_pos3 = {
     5: [0.5, 0.3],
     6: [0.3, 0.2],
     7: [0.7, 0.2],
-    8: [0.5, 0.1]
+    8: [0.5, 0.1],
+    34: [0.6, 0.35]
 }
 
 
