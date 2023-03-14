@@ -13,8 +13,6 @@ import PIL
 import re
 
 
-
-
 class MakeDataset(Dataset):
     def __init__(self, problem, example):
         # Search path
@@ -43,6 +41,7 @@ class MakeDataset(Dataset):
         ID_col = list(range(9))
         Type_bowl_col = [0,0,0,0,0,0,1,1,0]
         Type_box_col =  [0,1,1,1,1,1,0,0,0]
+        Type_Table_col =[0,0,0,0,0,0,0,0,1]
         Type_robot_col =[1,0,0,0,0,0,0,0,0]
         Property_g_col =[0,1,1,1,1,1,1,1,0]
 
@@ -57,7 +56,7 @@ class MakeDataset(Dataset):
         # print(Property_v_col)        
 
         node_feature0_csv = pd.DataFrame({'ID': ID_col,'Type_Bowl': Type_bowl_col, 'Type_Box': Type_box_col, 'Type_Robot': Type_robot_col, \
-                                          'Property_V': Property_v_col, 'Property_G': Property_g_col})
+                                          'Type_Table': Type_Table_col, 'Property_V': Property_v_col, 'Property_G': Property_g_col})
 
         node_feature0_csv = node_feature0_csv.set_index("ID")
         print(node_feature0_csv)
@@ -70,20 +69,18 @@ class MakeDataset(Dataset):
 
 
 
-    def changed_node_feature(self, file_num):
-        sample_node_path = os.path.join(self.search_path,'node_features')
-        file_list = natsort.natsorted(os.listdir(sample_node_path))
-        from_node_path = os.path.join(self.search_path, 'node_features', file_list[file_num-1])
+    def changed_node_feature(self, save_num):
+        node_features_path = os.path.join(self.search_path,'node_features')
+        file_list = natsort.natsorted(os.listdir(node_features_path))
+        from_node_path = os.path.join(self.search_path, 'node_features', file_list[save_num-1])
         nf0 = pd.read_csv(from_node_path)
         print(nf0)
         attach_i = nf0[nf0['Property_V'] == 1]
         attach_index = attach_i.index.to_list() #[int, int]
         attach_id = attach_i["ID"].to_list()
         # print(attach_index)
-       
-
+    
         attach_boxes = str(attach_id[-2]) + str(attach_id[-1])
-
         
         nf0 = nf0.drop(index=attach_index[-1])
         nf0 = nf0.drop(index=attach_index[-2])
@@ -93,18 +90,26 @@ class MakeDataset(Dataset):
         list_0 = [0 for n in range(len(nf1.index)-1)] + [1]
         nf1.loc[:,'Type_Attached_Boxes'] = list_0
         nf1.loc[attach_boxes, 'Property_V'] = 1
+        nf1.loc[attach_boxes, 'Property_G'] = 1
 
-        print("\n[Changed node features]\n",nf1)
-        save_nf1_path = os.path.join(self.search_path, 'node_features')
-        createFolder(save_nf1_path)
-        save_csv = os.path.join(save_nf1_path, f'{self.example}_nf{file_num}.csv')
+        print(f'\n[{self.example}_nf{save_num}]\n',nf1)
+        
+        save_csv = os.path.join(node_features_path, f'{self.example}_nf{save_num}.csv')
         nf1.to_csv(save_csv) 
         
-        print(f'----\n{self.example}_nf{file_num}.csv file is saved----')
+        print(f'\n----{self.example}_nf{save_num}.csv file is saved----')
 
+    def same_node_features(self, save_num):
+        node_features_path = os.path.join(self.search_path,'node_features')
+        file_list = natsort.natsorted(os.listdir(node_features_path))
+        from_node_path = os.path.join(self.search_path, 'node_features', file_list[save_num-1])
+        nf = pd.read_csv(from_node_path)
+        nf = nf.set_index("ID")
+        save_csv = os.path.join(node_features_path, f'{self.example}_nf{save_num}.csv')
+        nf.to_csv(save_csv) 
+        print(f'\n----{self.example}_nf{save_num}.csv file is saved----')
 
-
-    def pick(self, save_num, obj1): # obj = ID number
+    def pick_inx(self, save_num, obj1): # obj = ID number
         # Choose sample
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
@@ -150,7 +155,7 @@ class MakeDataset(Dataset):
 
 
         
-    def place(self, save_num, obj1, obj2): 
+    def place_inx(self, save_num, obj1, obj2): 
         sample_inx_path = os.path.join(self.search_path,'edge_index')
         file_list = natsort.natsorted(os.listdir(sample_inx_path))
 
@@ -195,14 +200,14 @@ class MakeDataset(Dataset):
         else:
             print("----Cannot place this object----")
 
-    def attach(self, save_num, nf_num, obj1, obj2):
+    def attach_inx(self, save_num, obj1, obj2):
         attach_csv = self.place_csv
        
         #### Simply attach object one by one 
         sample_node_path = os.path.join(self.search_path, 'node_features')
         file_list = natsort.natsorted(os.listdir(sample_node_path))
 
-        from_node_path = os.path.join(self.search_path, 'node_features', file_list[nf_num])
+        from_node_path = os.path.join(self.search_path, 'node_features', file_list[save_num])
         nf = pd.read_csv(from_node_path)
         # print(nf)
         attached_boxes = nf[nf['Type_Attached_Boxes'] == 1]["ID"].to_list()[0]
@@ -230,6 +235,7 @@ class MakeDataset(Dataset):
                 createFolder(save_path)
                 attach_csv.to_csv(os.path.join(save_path,file_name))
 
+                print(f'\n[ef_attach_{str(obj1)}_and_{str(obj2)}.csv] \n')
                 return attach_csv
 
             else:
@@ -304,7 +310,7 @@ class MakeDataset(Dataset):
         from_node_path = os.path.join(self.search_path, 'node_features', file_list[0])
         nf = pd.read_csv(from_node_path)
         node_index = nf['ID'].to_list()
-        print(node_index)
+        # print(node_index)
 
         list_0 = [0 for i in range(len(node_index))]
         list_normal = [0, 0, 0, 0, 0, 0, 0, 0, 1]
@@ -328,6 +334,8 @@ class MakeDataset(Dataset):
 
     def init_edge_attr(self):
         list_attr = []
+        list_attr1 = []
+        list_attr0 = []
 
         # Dataframe
         edge_inx_path = os.path.join(self.search_path, 'edge_index')
@@ -336,8 +344,7 @@ class MakeDataset(Dataset):
         ef = pd.read_csv(edge_path, index_col=0)
         
         # print("ef\n", ef)
-        list_attr1 = []
-        list_attr0 = []
+
 
         ID_list = list(map(int, ef.columns))
         for index in range(len(ID_list)):
@@ -350,25 +357,27 @@ class MakeDataset(Dataset):
 
         list_attr = list_attr1 + list_attr0 # 전체가 다 연결된 것 
 
+        list_0 = [0 for i in range(len(list_attr1))]
         # 연결된 숫자만 있는 것 끼리 묶는 걸로 - 이니셜의 경우 다 연결되어 있어서 의미가 없어보임. 그 외에도 별로 안 줄어들어서 의미가 없어 보임
 
-        print("[list1]",list_attr1,'\n')
+        # print("[list1]",list_attr1,'\n')
         # print(list_attr, "length", len(list_attr))
-
-        list_0 = [0 for i in range(len(list_attr1))]
-        list_1 = [1 for i in range(len(list_attr1))]
-        
-        list_on_right = [1,1,1,1,1,1,1,0,0,0,0,0,0,0]
-        list_on_left = [0,0,0,0,0,0,0,1,1,1,1,1,1,1]
-
-
-        edge_attr0_csv = pd.DataFrame({'ID': list_attr1, 'rel_on_right':list_on_right, 'rel_on_left': list_on_left, \
-                                        'rel_in_right':list_0, 'rel_in_left': list_0, 'rel_attach':list_0, \
+        edge_attr0_csv = pd.DataFrame({'ID': list_attr1, 'rel_on_right':list_0, 'rel_on_left': list_0, \
+                                        'rel_in_right':list_0, 'rel_in_left': list_0, #'rel_attach':list_0, \
                                         'rel_in_grasp':list_0, 'rel_grasp': list_0 })
                                         #'pos_x': list_0, 'pos_y': list_0, 'pos_z': list_0, \
                                         #'pos_roll':list_0, 'pos_pitch':list_0, 'pos_yaw':list_0})
 
         edge_attr0_csv = edge_attr0_csv.set_index("ID")
+
+        for node_pair in list_attr1:
+            if 'stacking' in self.problem:
+                ret = [int(k) for k in re.split('[^0-9]', str(node_pair)) if k]
+                if ret[0] == 8:
+                    edge_attr0_csv.loc[[node_pair], 'rel_on_left'] = 1
+                if ret[1] == 8:
+                    edge_attr0_csv.loc[[node_pair], 'rel_on_right'] = 1
+        
 
 
         # SAVE PATH (edge_attr)
@@ -469,22 +478,20 @@ class MakeDataset(Dataset):
   
 
     ############################################# Make Edge attributes##########################################
-    def pick_attr(self, save_num = int):
+    def pick_attr(self, save_num):
         # Choose sample
         edge_attr_path = os.path.join(self.search_path,'edge_attr')
         attr_file_list = natsort.natsorted(os.listdir(edge_attr_path))
         attr_path = os.path.join(edge_attr_path, attr_file_list[save_num-1])
         ea_csv = pd.read_csv(attr_path, index_col=0)
+        previous_ea_inx = ea_csv.index.to_list()
 
-        # edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
+
         edge_index_path = os.path.join(self.search_path,'edge_index')
         inx_file_list = natsort.natsorted(os.listdir(edge_index_path))
         inx_path = os.path.join(edge_index_path,inx_file_list[save_num])
         ei_csv = pd.read_csv(inx_path, index_col=0)
-
-        # Data type) column :'object', index = 'int64'
-        print("\n[ea csv]\n", ea_csv)
-        print("\n[ei csv]\n", ei_csv)
+  
 
         ef = ei_csv
 
@@ -502,46 +509,55 @@ class MakeDataset(Dataset):
         ea_csv.index = list_attr1
         ea_csv.index.name = "ID"
         edge_attr_csv = ea_csv
-        print("\n[New]\n",edge_attr_csv)
-    
-
         edge_attr_csv_id = edge_attr_csv.index.to_list()
-        # print("[ID]",edge_attr_csv_id)
+       
         
         # Apparently, wrapping the tuple index in a list works
         # print(edge_attr_csv.loc[[(0, 4)], 'rel_grasp'])
         for node_pair in edge_attr_csv_id:
+            print("np",node_pair, type(node_pair))
+            for pre in previous_ea_inx: 
+                print("pre",pre, type(node_pair))
+                if node_pair == pre:
+                    print("pick node pair", node_pair)
+                    # edge_attr_csv.loc[[node_pair]] = ea_csv.loc[pre].values.tolist()
             ret = [int(k) for k in re.split('[^0-9]', str(node_pair)) if k]
-            if ret[0] == 0:
-                edge_attr_csv.loc[[node_pair], :] = 0
-                edge_attr_csv.loc[[node_pair], 'rel_grasp'] = 1
-            elif ret[1] == 0:
-                edge_attr_csv.loc[[node_pair], :] = 0
-                edge_attr_csv.loc[[node_pair], 'rel_in_grasp'] = 1
-        
+            if 'stacking' in self.problem:
+                if ret[0] == 0:
+                    edge_attr_csv.loc[[node_pair], :] = 0
+                    edge_attr_csv.loc[[node_pair], 'rel_grasp'] = 1
+                if ret[1] == 0:
+                    edge_attr_csv.loc[[node_pair], :] = 0
+                    edge_attr_csv.loc[[node_pair], 'rel_in_grasp'] = 1
+                # if ret[0] == 8:
+                #     edge_attr_csv.loc[[node_pair], :] = 0
+                #     edge_attr_csv.loc[[node_pair], 'rel_on_left'] = 1
+                # if ret[1] == 8:
+                #     edge_attr_csv.loc[[node_pair], :] = 0
+                #     edge_attr_csv.loc[[node_pair], 'rel_on_right'] = 1
 
-        # SAVE PATH (edge_attr)
-        save_csv = os.path.join(edge_attr_path, f'{self.example}_ea{save_num}.csv')
-        edge_attr_csv.to_csv(save_csv) 
-        print(f"\n----{self.example}_ea{save_num}.csv is saved----")
+        # print("\n[New]\n",edge_attr_csv)
+
+        # # SAVE PATH (edge_attr)
+        # save_csv = os.path.join(edge_attr_path, f'{self.example}_ea{save_num}.csv')
+        # edge_attr_csv.to_csv(save_csv) 
+        # print(f"\n----{self.example}_ea{save_num}.csv is saved----")
 
 
     def place_attr(self, save_num, obj1, obj2):
-        # Choose sample
+        # Choose attr
         edge_attr_path = os.path.join(self.search_path,'edge_attr')
         attr_file_list = natsort.natsorted(os.listdir(edge_attr_path))
         attr_path = os.path.join(edge_attr_path, attr_file_list[save_num-1])
         ea_csv = pd.read_csv(attr_path, index_col=0)
+        previous_ea_inx = ea_csv.index.to_list()
 
-        # edge_path = os.path.join(self.search_path, 'test/edge_index',file_list[file_num])
+        # Choose index
         edge_index_path = os.path.join(self.search_path,'edge_index')
         inx_file_list = natsort.natsorted(os.listdir(edge_index_path))
         inx_path = os.path.join(edge_index_path,inx_file_list[save_num])
         ei_csv = pd.read_csv(inx_path, index_col=0)
 
-        # Data type) column :'object', index = 'int64'
-        print(f"\n[{attr_file_list[save_num-1]}]\n", ea_csv)
-        print(f"\n[{inx_file_list[save_num]}]\n", ei_csv)
         ef = ei_csv
 
         # list_attr1에 새로 바뀐 id들을 저장
@@ -554,29 +570,113 @@ class MakeDataset(Dataset):
                     list_attr1.append((ID_list[index], ID_list[column]))
 
       
-
         # Changed data
         ea_csv.index = list_attr1
         ea_csv.index.name = "ID"
         edge_attr_csv = ea_csv
-        print("\n[New]\n",edge_attr_csv)
 
         edge_attr_csv_id = edge_attr_csv.index.to_list()
+
         for node_pair in edge_attr_csv_id:
+            # print("np",node_pair, type(node_pair))
+            for pre in previous_ea_inx: 
+                # print("pre",pre, type(node_pair))
+                if node_pair == pre:
+                    edge_attr_csv.loc[[node_pair]] = ea_csv.loc[pre].values.tolist()
             # Grasp로 잡힌 거 놓아주고
             edge_attr_csv.loc[[node_pair], 'rel_grasp'] = 0
             edge_attr_csv.loc[[node_pair], 'rel_in_grasp'] = 0
 
-        edge_attr_csv.loc[[(obj1,obj2)], :] = 0
-        edge_attr_csv.loc[[(obj1,obj2)], 'rel_on_right'] = 0
-            # edge_attr_csv.loc[[node_pair], 'rel_on_right'] = 1
-            # ret = [int(k) for k in re.split('[^0-9]', str(node_pair)) if k]
-            # if ret[0] != 8 and ret[1] != 8:
-            #     print("node pair", node_pair)
-            #     edge_attr_csv.loc[[node_pair], :] = 0
-            #     edge_attr_csv.loc[[node_pair], 'rel_on_right'] = 1
-        print("\n[Newer]\n",edge_attr_csv)
+            ret = [int(k) for k in re.split('[^0-9]', str(node_pair)) if k]
+            if 'stacking' in self.problem:
+                # if ret[0] == 8:
+                #     edge_attr_csv.loc[[node_pair], :] = 0
+                #     edge_attr_csv.loc[[node_pair], 'rel_on_left'] = 1
+                # if ret[1] == 8:
+                #     edge_attr_csv.loc[[node_pair], :] = 0
+                #     edge_attr_csv.loc[[node_pair], 'rel_on_right'] = 1
+                # object끼리 \\On\\ 관계
+                edge_attr_csv.loc[[(obj1,obj2)], :] = 0
+                edge_attr_csv.loc[[(obj2,obj1)], :] = 0
+                edge_attr_csv.loc[[(obj1,obj2)], 'rel_on_right'] = 1
+                edge_attr_csv.loc[[(obj2,obj1)], 'rel_on_left'] = 1
 
+        print("\n[New]\n",edge_attr_csv)
+
+        # SAVE PATH (edge_attr)
+        save_csv = os.path.join(edge_attr_path, f'{self.example}_ea{save_num}.csv')
+        edge_attr_csv.to_csv(save_csv) 
+        print(f"\n----{self.example}_ea{save_num}.csv is saved----")
+        # self.place_obj1 = obj1
+        # self.place_obj2 = obj2
+        
+        # return self.place_obj1, self.place_obj2
+
+
+    def attach_attr(self, save_num, obj1, obj2):
+        # Choose attr
+        edge_attr_path = os.path.join(self.search_path,'edge_attr')
+        attr_file_list = natsort.natsorted(os.listdir(edge_attr_path))
+        attr_path = os.path.join(edge_attr_path, attr_file_list[save_num-1])
+        ea_csv = pd.read_csv(attr_path, index_col=0)
+        previous_ea_inx = ea_csv.index.to_list()
+        # print("\n[Previous one]\n", previous_ea_inx)
+
+        # Choose index
+        edge_index_path = os.path.join(self.search_path,'edge_index')
+        inx_file_list = natsort.natsorted(os.listdir(edge_index_path))
+        inx_path = os.path.join(edge_index_path,inx_file_list[save_num])
+        ei_csv = pd.read_csv(inx_path, index_col=0)
+
+        ef = ei_csv
+
+        # list_attr1에 새로 바뀐 id들을 저장
+        list_attr1 = []
+
+        ID_list = list(map(int, ef.columns))
+        for index in range(len(ID_list)):
+            for column in range(len(ID_list)):
+                if ef.iat[index, column] == 1:   
+                    list_attr1.append((ID_list[index], ID_list[column]))
+
+        # print("[list1]",list_attr1,'\n')
+
+        list_0 = [0 for i in range(len(list_attr1))]
+        
+        # print(list_attr, "length", len(list_attr))
+        edge_attr_csv = pd.DataFrame({'ID': list_attr1, 'rel_on_right':list_0, 'rel_on_left': list_0, \
+                                        'rel_in_right':list_0, 'rel_in_left': list_0,
+                                        #'rel_attach':list_0, \
+                                        'rel_in_grasp':list_0, 'rel_grasp': list_0 })
+                                        #'pos_x': list_0, 'pos_y': list_0, 'pos_z': list_0, \
+                                        #'pos_roll':list_0, 'pos_pitch':list_0, 'pos_yaw':list_0})
+
+        edge_attr_csv = edge_attr_csv.set_index("ID")
+
+        for node_pair in list_attr1:
+            for pre in previous_ea_inx:        
+                if str(node_pair) == pre:
+                    edge_attr_csv.loc[[node_pair]] = ea_csv.loc[[pre]].values.tolist()
+            if 'stacking' in self.problem:
+                ret = [int(k) for k in re.split('[^0-9]', str(node_pair)) if k]
+                # New object도 포함해서 재정리
+                if ret[0] == 8:
+                    edge_attr_csv.loc[[node_pair], 'rel_on_left'] = 1
+                if ret[1] == 8:
+                    edge_attr_csv.loc[[node_pair], 'rel_on_right'] = 1
+           
+        print("\n[New]\n",edge_attr_csv)
+
+
+  
+        
+
+        ### SAVE PATH (edge_attr)
+        save_csv = os.path.join(edge_attr_path, f'{self.example}_ea{save_num}.csv')
+        edge_attr_csv.to_csv(save_csv) 
+        print(f"\n----{self.example}_ea{save_num}.csv is saved----")
+
+#################################################################################################
     # def make_edge_attr(self,i): 
     #     # edge_index: [2, num_edges], edge_attr: [num_edges, dim_edge_features]
     #     edge_feature_path = os.path.join(self.FILEPATH, self.problem, 'edge_features')

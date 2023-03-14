@@ -136,39 +136,219 @@ if __name__ == '__main__':
 
 
     ## 1_2_345 # Attach - file 3번과 6번에 2번 걸쳐 일어남
-    make_data = MakeDataset(problem='stacking_v3', example= '1_2_345')
+    # make_data = MakeDataset(problem='stacking_v3', example= '1_2_345')
 
+    # # Node features
+    # print(make_data.init_node_features())
+    # print(make_data.same_node_features(save_num = 1))
+    # print(make_data.same_node_features(save_num = 2))
+    # print(make_data.changed_node_feature(save_num = 3))
+    # print(make_data.same_node_features(save_num = 4))
+    # print(make_data.same_node_features(save_num = 5))
+    # print(make_data.changed_node_feature(save_num = 6))
+    # print(make_data.same_node_features(save_num = 7))
+    # print(make_data.same_node_features(save_num = 8))
+    # print(make_data.same_node_features(save_num = 9))
+    # print(make_data.same_node_features(save_num = 10))
+
+    # # Edge index # 나중에는 번호마저 자동화하는 걸로!
+    # print(make_data.init_edge_index())
+    # print(make_data.pick_inx(save_num=1, obj1= 4))
+    # print(make_data.place_inx(save_num=2, obj1=4, obj2= 5))
+    # print(make_data.attach_inx(save_num=3, obj1=4, obj2= 5))
+    # print(make_data.pick_inx(save_num=4, obj1=3))
+    # print(make_data.place_inx(save_num=5, obj1=3, obj2= 45))
+    # print(make_data.attach_inx(save_num=6, obj1=3, obj2= 45))
+    # print(make_data.pick_inx(save_num=7, obj1=2))
+    # print(make_data.place_inx(save_num=8, obj1=2, obj2=345))
+    # print(make_data.pick_inx(save_num=9, obj1=1))
+    # print(make_data.place_inx(save_num=10, obj1=1, obj2=2))
+
+    # # # Edge attribute
+    # print(make_data.init_edge_attr()) # 뒤에 노드 8번이 들어가면 'rel_on_right' = 1, 앞에 node 8번이 들어가면 'rel_on_left'로 지정
+    # print(make_data.pick_attr(save_num=1)) # 
+    # print(make_data.place_attr(save_num=2, obj1=4, obj2=5))
+    # print(make_data.attach_attr(save_num=3, obj1=4, obj2=5))
+    # print(make_data.pick_attr(save_num=4)) 
+    # print(make_data.place_attr(save_num=5, obj1=3, obj2=45))
+    # print(make_data.attach_attr(save_num=6, obj1=3, obj2= 45))
+    # print(make_data.pick_attr(save_num=7))
+    # print(make_data.place_attr(save_num=8, obj1=2, obj2=345))
+    # print(make_data.pick_attr(save_num=9))
+    # print(make_data.place_attr(save_num=10, obj1=1, obj2=2))
+
+    # make_data = MakeDataset(problem='stacking_v3', example= '1_234_5')
+
+    # # Node features
+    # print(make_data.init_node_features())
+    # print(make_data.same_node_features(save_num = 1))
+    # print(make_data.same_node_features(save_num = 2))
+    # print(make_data.changed_node_feature(save_num = 3))
+    # print(make_data.same_node_features(save_num = 4))
+    # print(make_data.same_node_features(save_num = 5))
+    # print(make_data.changed_node_feature(save_num = 6))
+    # print(make_data.same_node_features(save_num = 7))
+    # print(make_data.same_node_features(save_num = 8))
+    # print(make_data.same_node_features(save_num = 9))
+    # print(make_data.same_node_features(save_num = 10))
+
+    # # Edge index # 나중에는 번호마저 자동화하는 걸로!
+    # print(make_data.init_edge_index())
+    # print(make_data.pick_inx(save_num=1, obj1= 3))
+    # print(make_data.place_inx(save_num=2, obj1=3, obj2= 4))
+    # print(make_data.attach_inx(save_num=3, obj1=3, obj2= 4))
+    # print(make_data.pick_inx(save_num=4, obj1=2))
+    # print(make_data.place_inx(save_num=5, obj1=2, obj2= 34))
+    # print(make_data.attach_inx(save_num=6, obj1=2, obj2= 34))
+    # print(make_data.pick_inx(save_num=7, obj1=234))
+    # print(make_data.place_inx(save_num=8, obj1=234, obj2=5))
+    # print(make_data.pick_inx(save_num=9, obj1=1))
+    # print(make_data.place_inx(save_num=10, obj1=1, obj2=234))
+
+    # # # Edge attribute
+    # print(make_data.init_edge_attr()) # 뒤에 노드 8번이 들어가면 'rel_on_right' = 1, 앞에 node 8번이 들어가면 'rel_on_left'로 지정
+    # print(make_data.pick_attr(save_num=1))
+    # print(make_data.place_attr(save_num=2, obj1=3, obj2= 4))
+    # print(make_data.attach_attr(save_num=3, obj1=3, obj2= 4))
+    # print(make_data.pick_attr(save_num=4)) # 노드 0번에 들린 node로 계산
+    # print(make_data.place_attr(save_num=5, obj1=2, obj2= 34))
+    # print(make_data.attach_attr(save_num=6, obj1=2, obj2= 34))
+    # print(make_data.pick_attr(save_num=7))
+    # print(make_data.place_attr(save_num=8, obj1=234, obj2=5))
+    # print(make_data.pick_attr(save_num=9))
+    # print(make_data.place_attr(save_num=10, obj1=1, obj2=234))
+
+############################### [Stacking 123_4_5] ################################################
+    make_data = MakeDataset(problem='stacking_v3', example= '123_4_5')
+    
     # Node features
     # print(make_data.init_node_features())
-    # print(make_data.changed_node_feature(file_num = 1))
-    # print(make_data.changed_node_feature(file_num = 2))
+    # print(make_data.same_node_features(save_num = 1))
+    # print(make_data.same_node_features(save_num = 2))
+    # print(make_data.same_node_features(save_num = 3))
+    # print(make_data.same_node_features(save_num = 4))
+    # print(make_data.changed_node_feature(save_num = 5))
+    # print(make_data.same_node_features(save_num = 6))
+    # print(make_data.same_node_features(save_num = 7))
+    # print(make_data.changed_node_feature(save_num = 8))
+    # print(make_data.same_node_features(save_num = 9))
+    # print(make_data.same_node_features(save_num = 10))
 
     # Edge index # 나중에는 번호마저 자동화하는 걸로!
     # print(make_data.init_edge_index())
-    # print(make_data.pick(save_num=1, obj1= 4))
-    # print(make_data.place(save_num=2, obj1=4, obj2= 5))
-    # print(make_data.attach(save_num=3, nf_num = 1, obj1=4, obj2= 5))
-    # print(make_data.pick(save_num=4, obj1=3))
-    # print(make_data.place(save_num=5, obj1=3, obj2= 45))
-    # print(make_data.attach(save_num=6, nf_num = 2, obj1=3, obj2= 45))
-    # print(make_data.pick(save_num=7, obj1=2))
-    # print(make_data.place(save_num=8, obj1=2, obj2=345))
-    # print(make_data.pick(save_num=9, obj1=1))
-    # print(make_data.place(save_num=10, obj1=1, obj2=2))
+    # print(make_data.pick_inx(save_num=1, obj1= 4))
+    # print(make_data.place_inx(save_num=2, obj1=4, obj2= 5))
+    # print(make_data.pick_inx(save_num=3, obj1=2))
+    # print(make_data.place_inx(save_num=4, obj1=2, obj2= 3))
+    # print(make_data.attach_inx(save_num=5, obj1=2, obj2= 3))
+    # print(make_data.pick_inx(save_num=6, obj1=1))
+    # print(make_data.place_inx(save_num=7, obj1=1, obj2=23))
+    # print(make_data.attach_inx(save_num=8, obj1=1, obj2= 23))
+    # print(make_data.pick_inx(save_num=9, obj1=123))
+    # print(make_data.place_inx(save_num=10, obj1=123, obj2=4))
 
     # # Edge attribute
-    print(make_data.init_edge_attr())
+    print(make_data.init_edge_attr()) # 뒤에 노드 8번이 들어가면 'rel_on_right' = 1, 앞에 node 8번이 들어가면 'rel_on_left'로 지정
     print(make_data.pick_attr(save_num=1))
-    print(make_data.place_attr(save_num=2, obj1=4, obj2=5))
+    # print(make_data.place_attr(save_num=2, obj1=4, obj2= 5))
+    # print(make_data.pick_attr(save_num=3))
+    # print(make_data.place_attr(save_num=4, obj1=2, obj2= 3))
+    # print(make_data.attach_attr(save_num=5, obj1=2, obj2= 3))
+    # print(make_data.pick_attr(save_num=6))
+    # print(make_data.place_attr(save_num=7, obj1=1, obj2=23))
+    # print(make_data.attach_attr(save_num=8, obj1=1, obj2= 23))
+    # print(make_data.pick_attr(save_num=9))
+    # print(make_data.place_attr(save_num=10, obj1=123, obj2=4))
 
 
 
+############################### [Stacking 1234_5] ################################################
+    # make_data = MakeDataset(problem='stacking_v4', example= '1234_5')
+    # # Node features
+    # print(make_data.init_node_features())
+    # print(make_data.same_node_features(save_num = 1))
+    # print(make_data.same_node_features(save_num = 2))
+    # print(make_data.changed_node_feature(save_num = 3))
+    # print(make_data.same_node_features(save_num = 4))
+    # print(make_data.same_node_features(save_num = 5))
+    # print(make_data.changed_node_feature(save_num = 6))
+    # print(make_data.same_node_features(save_num = 7))
+    # print(make_data.same_node_features(save_num = 8))
+    # print(make_data.changed_node_feature(save_num = 9))
+    # print(make_data.same_node_features(save_num = 10))
+    # print(make_data.same_node_features(save_num = 11))
 
+    # # Edge index # 나중에는 번호마저 자동화하는 걸로!
+    # print(make_data.init_edge_index())
+    # print(make_data.pick_inx(save_num=1, obj1= 3))
+    # print(make_data.place_inx(save_num=2, obj1=3, obj2= 4))
+    # print(make_data.attach_inx(save_num=3, obj1= 3, obj2= 4))
+    # print(make_data.pick_inx(save_num=4, obj1=2))
+    # print(make_data.place_inx(save_num=5, obj1=2, obj2= 34))
+    # print(make_data.attach_inx(save_num=6, obj1=2, obj2= 34))
+    # print(make_data.pick_inx(save_num=7, obj1=1))
+    # print(make_data.place_inx(save_num=8, obj1=1, obj2=234))
+    # print(make_data.attach_inx(save_num=9, obj1=1, obj2= 234))
+    # print(make_data.pick_inx(save_num=10, obj1=1234))
+    # print(make_data.place_inx(save_num=11, obj1=1234, obj2=5))
 
+    # # # Edge attribute
+    # print(make_data.init_edge_attr()) # 뒤에 노드 8번이 들어가면 'rel_on_right' = 1, 앞에 node 8번이 들어가면 'rel_on_left'로 지정
+    # print(make_data.pick_attr(save_num=1))
+    # print(make_data.place_attr(save_num=2, obj1=3, obj2= 4))
+    # print(make_data.attach_attr(save_num=3, obj1= 3, obj2= 4))
+    # print(make_data.pick_attr(save_num=4))
+    # print(make_data.place_attr(save_num=5, obj1=2, obj2= 34))
+    # print(make_data.attach_attr(save_num=6, obj1=2, obj2= 34))
+    # print(make_data.pick_attr(save_num=7))
+    # print(make_data.place_attr(save_num=8, obj1=1, obj2=234))
+    # print(make_data.attach_attr(save_num=9, obj1=1, obj2= 234))
+    # print(make_data.pick_attr(save_num=10))
+    # print(make_data.place_attr(save_num=11, obj1=1234, obj2=5))
 
+############################### [Stacking 1_2345] ################################################
+    # make_data = MakeDataset(problem='stacking_v4', example= '1_2345')
+    # # Node features
+    # print(make_data.init_node_features())
+    # print(make_data.same_node_features(save_num = 1))
+    # print(make_data.same_node_features(save_num = 2))
+    # print(make_data.changed_node_feature(save_num = 3))
+    # print(make_data.same_node_features(save_num = 4))
+    # print(make_data.same_node_features(save_num = 5))
+    # print(make_data.changed_node_feature(save_num = 6))
+    # print(make_data.same_node_features(save_num = 7))
+    # print(make_data.same_node_features(save_num = 8))
+    # print(make_data.changed_node_feature(save_num = 9))
+    # print(make_data.same_node_features(save_num = 10))
+    # print(make_data.same_node_features(save_num = 11))
 
+    # # Edge index # 나중에는 번호마저 자동화하는 걸로!
+    # print(make_data.init_edge_index())
+    # print(make_data.pick_inx(save_num=1, obj1= 4))
+    # print(make_data.place_inx(save_num=2, obj1=4, obj2= 5))
+    # print(make_data.attach_inx(save_num=3, obj1= 4, obj2= 5))
+    # print(make_data.pick_inx(save_num=4, obj1=3))
+    # print(make_data.place_inx(save_num=5, obj1=3, obj2= 45))
+    # print(make_data.attach_inx(save_num=6, obj1=3, obj2= 45))
+    # print(make_data.pick_inx(save_num=7, obj1=2))
+    # print(make_data.place_inx(save_num=8, obj1=2, obj2=345))
+    # print(make_data.attach_inx(save_num=9, obj1=2, obj2= 345))
+    # print(make_data.pick_inx(save_num=10, obj1=1))
+    # print(make_data.place_inx(save_num=11, obj1=1, obj2=2345))
 
-
+    # # # Edge attribute
+    # print(make_data.init_edge_attr()) # 뒤에 노드 8번이 들어가면 'rel_on_right' = 1, 앞에 node 8번이 들어가면 'rel_on_left'로 지정
+    # print(make_data.pick_attr(save_num=1))
+    # print(make_data.place_attr(save_num=2, obj1=4, obj2= 5))
+    # print(make_data.attach_attr(save_num=3, obj1= 4, obj2= 5))
+    # print(make_data.pick_attr(save_num=4))
+    # print(make_data.place_attr(save_num=5, obj1=3, obj2= 45))
+    # print(make_data.attach_attr(save_num=6, obj1=3, obj2= 45))
+    # print(make_data.pick_attr(save_num=7))
+    # print(make_data.place_attr(save_num=8, obj1=2, obj2=345))
+    # print(make_data.attach_attr(save_num=9, obj1=2, obj2= 345))
+    # print(make_data.pick_attr(save_num=10))
+    # print(make_data.place_attr(save_num=11, obj1=1, obj2=2345))
 
     ############################## [Mixing_5] ##############################
         # # Object 5
